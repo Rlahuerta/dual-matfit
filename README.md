@@ -1,21 +1,7 @@
 # Dual Material Fitting
  - keywords: Dual Material, Mixed Variational, Inverse Problem, Material Fitting
 
-A Python library for solving mixed variational problems with multiple fields, specifically designed for fitting hyperelastic material models (like the Holzapfel-Gasser-Ogden model) to experimental data from extension tests, such as those performed using an Instron machine.
-
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Processing Experimental Data](#processing-experimental-data)
-  - [Solving the Variational Problem](#solving-the-variational-problem)
-  - [Running Unit Tests](#running-unit-tests)
-  - [Automated Testing Script](#automated-testing-script)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
+A Python library for solving mixed variational problems with multiple fields, designed explicitly for fitting hyperelastic material models (like the Holzapfel-Gasser-Ogden model) to experimental data from extension tests, such as those performed using an Instron machine.
 
 ## Introduction
 
@@ -56,14 +42,8 @@ This library is intended for researchers and engineers working in computational 
 1. **Clone the Repository**
 
 ```bash
-git clone https://github.com/yourusername/dual-material-fitting.git
-cd dual-material-fitting
-```
-
-#### Create a Hyperlink to create local virtual environment
-```bash
-ln -s /home/tytan/NAS/Repositories/PycharmProjects/DualMatFit/poetry.lock poetry.lock
-ln -s /home/tytan/NAS/Repositories/PycharmProjects/DualMatFit/pyproject.toml pyproject.toml
+git clone https://github.com/Rlahuerta/dual-matfit.git
+cd dual-matfit
 ```
 
 #### The Python local virtual environment (via Poetry)
@@ -75,39 +55,7 @@ poetry install
 
 #### Using the docker-compose File
 
-When you run `docker-compose up --build` (windows), `docker compose up --build` (linux) or any other Docker Compose command that requires reading the `docker-compose.yml` file.
-
-## Migration from Python 3.7-3.10
-
-If you are upgrading from an older version of DualMatFit that supported Python 3.7-3.10, please see the [Migration Guide](docs/migration/python-version-upgrade.md) for detailed instructions.
-
-**Quick Summary:**
-- Python 3.11+ is now required (3.7-3.10 are no longer supported)
-- Performance improvements: 10-60% faster execution
-- Better type safety and IDE support
-- Security updates for supported Python versions
-
-To quickly migrate:
-```bash
-# Install Python 3.11+
-python3.11 -m venv venv
-source venv/bin/activate
-pip install -e .
-```
-
-## Documentation
-
-### Mathematical Algorithms
-
-Comprehensive mathematical documentation is available in the [`docs/algorithms/`](docs/algorithms/) directory:
-
-- **[HGO Material Model](docs/algorithms/hgo_model.md)**: Complete mathematical formulation including strain energy decomposition, fiber dispersion, and material parameter ranges. Based on Holzapfel et al. (2000, 2005, 2010) and Gasser et al. (2006).
-
-- **[Mixed Formulations](docs/algorithms/mixed_formulations.md)**: Three variational formulations for handling near-incompressibility (u, u-p, u-p-θ), volumetric locking solutions, and selection guidelines. Based on Simo et al. (1985) and Sussman-Bathe (1987).
-
-- **[Stabilization Parameters](docs/algorithms/stabilization.md)**: Detailed guide for numerical stabilization including matrix regularization, barrier methods, trust regions, L2 regularization, and parameter selection methodologies.
-
-See the [**Algorithm Documentation Index**](docs/algorithms/README.md) for a complete overview.
+When you run `docker-compose up --build` (Windows), `docker compose up --build` (Linux), or any other Docker Compose command that requires reading the `docker-compose.yml` file.
 
 ### Key References
 
@@ -118,9 +66,3 @@ The implementation is based on these seminal papers:
 2. **Gasser, T. C., Ogden, R. W., & Holzapfel, G. A. (2006)**. *Hyperelastic modelling of arterial layers with distributed collagen fibre orientations*. Journal of the Royal Society Interface, 3(6), 15-35. [DOI: 10.1098/rsif.2005.0073](https://doi.org/10.1098/rsif.2005.0073)
 
 3. **Holzapfel, G. A., & Ogden, R. W. (2010)**. *Constitutive modelling of arteries*. Proceedings of the Royal Society A, 466(2118), 1551-1597. [DOI: 10.1098/rspa.2010.0058](https://doi.org/10.1098/rspa.2010.0058)
-
-### Python Version Requirements
-
-For details on Python version support and migration, see:
-- [Python Version Quick Reference](docs/PYTHON_VERSION.md)
-- [Migration Guide: Python 3.7-3.10 to 3.11+](docs/migration/python-version-upgrade.md)
