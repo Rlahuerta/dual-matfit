@@ -27,15 +27,8 @@ This library is intended for researchers and engineers working in computational 
 ### Prerequisites
 
 - Python 3.11, 3.12, or 3.13
+- [Conda](https://docs.conda.io/en/latest/miniconda.html) or [Mamba](https://mamba.readthedocs.io/) (recommended for faster environment creation)
 - **Note**: Python 3.11+ is required due to dependencies on modern type hints and performance improvements in NumPy/SciPy
-- [NumPy](https://numpy.org/)
-- [SciPy](https://scipy.org/)
-- [Pandas](https://pandas.pydata.org/)
-- [Matplotlib](https://matplotlib.org/)
-- [scikit-learn](https://scikit-learn.org/)
-- [pytest](https://docs.pytest.org/)
-- [pytest-cov](https://pytest-cov.readthedocs.io/)
-- [virtualenv](https://virtualenv.pypa.io/)
 
 ### Setup
 
@@ -46,16 +39,47 @@ git clone https://github.com/Rlahuerta/dual-matfit.git
 cd dual-matfit
 ```
 
-#### The Python local virtual environment (via Poetry)
+2. **Create and activate the Conda environment**
+
 ```bash
-poetry config virtualenvs.create true 
-poetry config virtualenvs.in-project true --local
-poetry install
+conda env create -f environment.yml
+conda activate matfit1d
+pip install -e .
 ```
 
-#### Using the docker-compose File
+To update an existing environment after pulling changes:
 
-When you run `docker-compose up --build` (Windows), `docker compose up --build` (Linux), or any other Docker Compose command that requires reading the `docker-compose.yml` file.
+```bash
+conda env update -f environment.yml --prune
+```
+
+3. **Verify the installation**
+
+```bash
+python -c "import dualmatfit; print(dualmatfit.__version__)"
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run only unit tests (fast)
+pytest tests/unit/
+
+# Run only integration tests
+pytest tests/integration/
+
+# Run with coverage
+pytest --cov=dualmatfit --cov-report=term-missing
+
+# Run in parallel
+pytest -n auto
+
+# Run the full pipeline script (lint, type check, test, coverage)
+bash local_pipelines.sh
+```
 
 ### Key References
 
