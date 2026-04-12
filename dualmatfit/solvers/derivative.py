@@ -61,10 +61,15 @@ def _auto_generate_bounds(
             bounds.append([1e-1, 1e8])
         elif 'nu' in param_name:  # Poisson's ratio
             bounds.append([-0.99, 0.499])
-        else:  # Generic positive parameter
-            if xi_val <= 0:
-                bounds.append([1e-6, 1e3])
+        else:  # Generic parameter
+            if xi_val < 0:
+                # For negative values, lower bound is more negative, upper bound is less negative
+                bounds.append([xi_val * 1000, min(-1e-6, xi_val * 0.001)])
+            elif xi_val == 0:
+                # For zero, use symmetric bounds around zero
+                bounds.append([-1e3, 1e3])
             else:
+                # For positive values
                 bounds.append([max(1e-6, xi_val * 0.001), xi_val * 1000])
 
     return bounds

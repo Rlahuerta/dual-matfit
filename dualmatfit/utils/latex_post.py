@@ -5,6 +5,7 @@ LaTeX table generation for material fitting results.
 This module provides functions for generating LaTeX tables from
 material fitting results for scientific publications.
 """
+import subprocess
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -19,6 +20,7 @@ __all__ = [
     'generate_latex_material_props_table',
     'generate_latex_dimensions_table',
     'generate_latex_dim2_table',
+    'sympy2latex',
 ]
 
 sections_keys = dict(Ar="aoa", Tr="dtao", Ab="daao")
@@ -406,3 +408,62 @@ if __name__ == "__main__":
                                     table_label,
                                     )
     test = 1.
+
+
+def sympy2latex(latex_code: Union[str, list], fname: str, wpath: Union[str, Path] = "") -> Path:
+    """
+    Convert LaTeX code to PDF using pdflatex.
+
+    Parameters
+    ----------
+    latex_code : str or list
+        LaTeX code to include in the document body.
+        If list, elements are concatenated.
+    fname : str
+        Output filename (should end with .tex)
+    wpath : str or Path, optional
+        Working directory path. Defaults to current directory.
+
+    Returns
+    -------
+    Path
+        Path to the output LaTeX file
+    """
+    latex_document = '\\documentclass{article}\n'
+    latex_document += '\\usepackage{amsmath, amssymb}\n'
+    latex_document += '\\usepackage{breqn}\n'
+    latex_document += '\\usepackage{graphicx}\n'
+    latex_document += '\\begin{document}\n'
+
+    if isinstance(latex_code, str):
+        latex_document += latex_code
+    elif isinstance(latex_code, list):
+        for latex_code_i in latex_code:
+            latex_document += latex_code_i
+    else:
+        raise NotImplementedError("latex_code must be str or list")
+
+    latex_document += '\\end{document}\n'
+
+    work_path = Path(wpath) if wpath else Path.cwd()
+    output_path = work_path / fname
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(output_path, 'w') as file:
+        file.write(latex_document)
+
+    result = subprocess.run(
+        ['pdflatex', output_path.name],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=output_path.parent
+    )
+
+    if result.returncode != 0:
+        logger.info("An error occurred during compilation:")
+        logger.info(result.stderr.decode())
+    else:
+        logger.info("Compilation successful! PDF created.")
+
+    return output_path

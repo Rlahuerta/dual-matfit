@@ -666,12 +666,13 @@ class CostIntegrator:
         self._cache_volume_diff = self._cache.volume_diff
         
         # --- Initialize Regularization Strategies ---
-        self._regularization = self._build_regularization()
+        epsilon = kwargs.get("epsilon", 0.) or 0.
+        self._regularization = self._build_regularization(vol_reg, epsilon)
 
-    def _build_regularization(self) -> CompositeRegularization:
+    def _build_regularization(self, vol_reg: bool, epsilon: float) -> CompositeRegularization:
         """Build the composite regularization strategy."""
         regularization = CompositeRegularization()
-        
+
         # Add L2 (Tikhonov) regularization if alpha > 0
         if self._alpha > 0:
             l2_reg = L2Regularization(
@@ -683,16 +684,16 @@ class CostIntegrator:
                 multi_objective=(len(self.lsq_mat_fun) > 1),
             )
             regularization.add_strategy(l2_reg)
-        
+
         # Add volume regularization if enabled
-        if self._dvol and self._epsilon > 0:
-            vol_reg = VolumeRegularization(
-                cost_functions=self.lsq_mat_fun,
-                epsilon=self._epsilon,
+        if vol_reg and epsilon > 0.:
+            vol_strategy = VolumeRegularization(
+                cost_functions=self.cost_functions,
+                epsilon=epsilon,
                 xi_bounds=self.xi_bounds,
                 cache=self._cache,
             )
-            regularization.add_strategy(vol_reg)
+            regularization.add_strategy(vol_strategy)
         
         return regularization
 

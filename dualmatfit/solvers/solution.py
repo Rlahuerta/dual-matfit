@@ -521,6 +521,22 @@ class Root:
             logger.debug("Falling back to scipy.root")
             result = optimize.root(fun_flat, x0_flat, jac=jac_flat, method='hybr', tol=self.tol)
 
+        return self._accept_small_residual_root_result(result)
+
+    def _accept_small_residual_root_result(self, result: optimize.OptimizeResult) -> optimize.OptimizeResult:
+        """Accept root results whose final residual already satisfies the solver tolerance."""
+        if result.success or not hasattr(result, "fun"):
+            return result
+
+        residual = sanitize_array(np.atleast_1d(np.asarray(result.fun, dtype=float)))
+        residual_norm = np.linalg.norm(residual)
+        if np.isfinite(residual_norm) and residual_norm <= max(self.tol, 1e-8):
+            result.success = True
+            result.message = (
+                f"{result.message} Residual norm {residual_norm:.3e} is within tolerance; "
+                "accepting solution."
+            )
+
         return result
 
     def _scipy_root_solve(self, x0: np.ndarray) -> optimize.OptimizeResult:
@@ -531,7 +547,7 @@ class Root:
         # For mixed formulations, we need to use a method that handles jacobians as lists
         # 'hybr' is a good general-purpose choice.
         result = optimize.root(fun_flat, x0_flat, jac=jac_flat, method='hybr', tol=self.tol)
-        return result
+        return self._accept_small_residual_root_result(result)
 
     def solve(self, x0: Union[List[np.ndarray], np.ndarray], **kwargs) -> optimize.OptimizeResult:
         """Solve the root-finding problem using the specified solver."""

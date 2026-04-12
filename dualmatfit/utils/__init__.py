@@ -8,6 +8,7 @@ __all__ = [
     "sanitize_array", "sanitize_gradient", "has_nan", "has_inf",
     "is_finite", "has_non_finite", "safe_divide",
     "PathConfiguration", "PathManager",
+    "min_ks", "max_ks",
 ]
 
 _MODULE_MAP = {
@@ -22,6 +23,8 @@ _MODULE_MAP = {
     "safe_divide": "numeric",
     "PathConfiguration": "path_manager",
     "PathManager": "path_manager",
+    "min_ks": "ks",
+    "max_ks": "ks",
 }
 
 

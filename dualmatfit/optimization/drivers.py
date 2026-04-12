@@ -49,6 +49,14 @@ def update_opt_parameters(local_res: OptimizeResult, global_res: OptimizeResult)
             setattr(global_res, attr, getattr(local_res, attr))
 
 
+def _sanitize_lbfgsb_options(options: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Remove L-BFGS-B options that are deprecated in SciPy."""
+    sanitized_options = dict(options or {})
+    for deprecated_key in ("disp", "iprint"):
+        sanitized_options.pop(deprecated_key, None)
+    return sanitized_options
+
+
 def _run_slsqp(cost_function, np_ini_dsvars, list_dsvars_bounds, glb, giter, solver_options, np_xi_lwr, np_xi_upp,
                np_xi_dt):
     if glb:
@@ -106,6 +114,7 @@ def _run_lbfgsb(cost_function, np_ini_dsvars, list_dsvars_bounds, glb, giter, mi
     lbfgsb_options = {'maxls': 80, 'maxcor': 15, 'maxiter': miter}
     if solver_options and 'lbfgsb_options' in solver_options:
         lbfgsb_options.update(solver_options['lbfgsb_options'])
+    lbfgsb_options = _sanitize_lbfgsb_options(lbfgsb_options)
 
     def print_callback(xk):
         logger.info(f"Current parameters: {xk}")

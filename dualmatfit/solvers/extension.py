@@ -141,13 +141,18 @@ class DesignVariablesMixin:
             raise TypeError("dsvars must be a pandas DataFrame or Series.")
         
         self.inp_mat_keys = mat_vars_keys
-        
+
+        # Ensure 'baseline' column exists; default to 'lower' if absent
+        if isinstance(self.dsvars, pd.DataFrame) and "baseline" not in self.dsvars.columns:
+            self.dsvars = self.dsvars.copy()
+            self.dsvars["baseline"] = self.dsvars["lower"]
+
         # Extract optimization-related arrays
         self.run_dsvars = self.dsvars["variable"].values.astype(bool)
         self.nvars = np.count_nonzero(self.run_dsvars)
-        
+
         self.xi = self.dsvars["values"][self.run_dsvars].values.astype(float)
-        self.xi_ref = self.dsvars["values"].values.astype(float)
+        self.xi_ref = self.dsvars["baseline"].values.astype(float)
         self.xi_bounds = dsvars[self.run_dsvars][["lower", "upper"]].values.tolist()
 
     def _update_design_variables(self, xi: np.ndarray) -> pd.Series:

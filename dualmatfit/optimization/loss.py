@@ -75,7 +75,7 @@ def _ensure_3d_jacobian(arr: np.ndarray) -> np.ndarray:
     return np.expand_dims(arr, axis=0) if arr.ndim == 2 else arr
 
 
-def lsq_fval(residuum: np.ndarray, **kwargs) -> float:
+def lsq_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
     """
     Compute the least squares function value.
 
@@ -158,7 +158,7 @@ def lsq_wise_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) ->
     return d_res2.reshape(-1, d_res2.shape[-1])
 
 
-def cauchy_fval(residuum: np.ndarray, c: float, **kwargs) -> float:
+def cauchy_fval(residuum: np.ndarray, c: float, **kwargs) -> np.ndarray:
     """
     Compute the Cauchy loss function value.
 
@@ -207,7 +207,7 @@ def cauchy_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, c: float, **kw
     return np.sum(list_dfvals, axis=0)
 
 
-def huber_fval(residuum: np.ndarray, delta: float = 1., **kwargs) -> float:
+def huber_fval(residuum: np.ndarray, delta: float = 1., **kwargs) -> np.ndarray:
     """
     Compute the Huber loss function value.
 
@@ -256,7 +256,7 @@ def huber_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, delta: float = 
     return np.sum(list_dfvals, axis=0)
 
 
-def logcosh_fval(residuum: np.ndarray, **kwargs) -> float:
+def logcosh_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
     """
     Compute the Log-Cosh function value.
 
@@ -297,7 +297,7 @@ def logcosh_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> 
     return np.sum(list_dfvals, axis=0)
 
 
-def ln_fval(residuum: np.ndarray, **kwargs) -> float:
+def ln_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
     """
     Compute the logarithm of the sum of squares function value.
 
