@@ -3,9 +3,12 @@ import unittest
 import numpy as np
 import pandas as pd
 import sympy as sy
+import pytest
 # import jax
 # import jax.numpy as jnp
 from jax import config as jax_config
+
+pytestmark = pytest.mark.integration
 
 from dualmatfit.formulation.variational import VariationalFormulation
 from dualmatfit.formulation.lambdify import LambdifyBuilder

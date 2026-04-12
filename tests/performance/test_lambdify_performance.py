@@ -7,6 +7,9 @@ import jax.numpy as jnp
 import numba
 import os
 import warnings
+import pytest
+
+pytestmark = pytest.mark.slow
 
 # Configure Numba to use workqueue threading layer to avoid TBB version warning
 os.environ.setdefault('NUMBA_THREADING_LAYER', 'workqueue')

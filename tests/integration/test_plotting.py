@@ -1,5 +1,8 @@
 # import os
 import unittest
+import pytest
+
+pytestmark = pytest.mark.integration
 
 import numpy as np
 import pandas as pd

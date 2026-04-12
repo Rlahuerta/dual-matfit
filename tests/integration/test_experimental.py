@@ -5,6 +5,8 @@ import pandas as pd
 import unittest
 import pytest
 
+pytestmark = pytest.mark.integration
+
 from scipy.optimize import OptimizeResult
 from dualmatfit.data.experimental import InstronData, MaterialSetup
 from dualmatfit.fitting.core import AnisoMaterialFit

@@ -1,6 +1,8 @@
 import unittest
 import pytest
 import numpy as np
+
+pytestmark = pytest.mark.integration
 import pandas as pd
 from scipy.optimize import rosen, rosen_der
 
