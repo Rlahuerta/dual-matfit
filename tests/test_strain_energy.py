@@ -12,11 +12,11 @@ from dualmatfit.plotting.plot_helpers import get_y_stretch
 from dualmatfit.plotting.analytical_visuals import (plot_test_1d, plot_test_2d, plot_aniso_inv_test_2d,
                                                    plot_aniso_strain_test_2d, plot_aniso_stress_test_2d,
                                                    plot_aniso_stress_split_test_2d)
-from dualmatfit.material_law import (right_cauchy_fun, neo_hookean, fung, volumetric_strain, anisotropic_strain,
+from dualmatfit.formulation.material_law import (right_cauchy_fun, neo_hookean, fung, volumetric_strain, anisotropic_strain,
                                     anisotropic_invariant, get_fiber_vector, heaviside)
-from dualmatfit.variational_form import VariationalFormulation
-from dualmatfit.lambdify_builder import _lambdify
-from dualmatfit.utils import sympy2latex
+from dualmatfit.formulation.variational import VariationalFormulation
+from dualmatfit.formulation.lambdify import _lambdify
+from dualmatfit.solvers.extension import sympy2latex
 
 current_file_path = os.path.dirname(os.path.abspath(__file__))
 

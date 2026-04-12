@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from dualmatfit.solution import log_barrier, inv_barrier_function
+from dualmatfit.solvers.barrier import log_barrier, inv_barrier_function
 
 
 class TestBarrierFunctions(unittest.TestCase):

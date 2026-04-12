@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dualmatfit.logging_config import (
+from dualmatfit.utils.logging_config import (
     setup_logging,
     get_logger,
     set_module_log_level,
@@ -19,7 +19,7 @@ from dualmatfit.logging_config import (
     enable_logging,
     get_log_level,
 )
-from dualmatfit.log_contexts import (
+from dualmatfit.utils.log_contexts import (
     log_solver_diagnostics,
     log_optimization_iteration,
     log_performance,

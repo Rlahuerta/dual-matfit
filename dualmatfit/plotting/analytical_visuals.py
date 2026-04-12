@@ -14,17 +14,17 @@ from typing import Optional, Union, Dict, List, Any, Tuple
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.gridspec import GridSpec
 
-from dualmatfit.logging_config import get_logger
-from dualmatfit.rato_info import excel_data
-from dualmatfit.drivers import opt_solvers
-from dualmatfit.experimental import InstronData, MaterialSetup
-from dualmatfit.variational_form import VariationalFormulation, ring_geom
-from dualmatfit.extension_solution import ExtensionSolution
-from dualmatfit.least_square import CostFunction, CostIntegrator
+from dualmatfit.utils.logging_config import get_logger
+from dualmatfit.data.rato_info import excel_data
+from dualmatfit.optimization.drivers import opt_solvers
+from dualmatfit.data.experimental import InstronData, MaterialSetup
+from dualmatfit.formulation.variational import VariationalFormulation, ring_geom
+from dualmatfit.solvers.extension import ExtensionSolution
+from dualmatfit.optimization.cost import CostFunction, CostIntegrator
 from dualmatfit.plotting.plot_helpers import get_x_stretch, get_y_stretch, plt_assign_sec, PlotHelper
 from dualmatfit.plotting.parameters import (COLORS, NAME_SECTIONS, SEGMENT_LINESTYLES,
                                            RATS_STYLES, DEFAULT_PLOT_LIMITS)
-from dualmatfit.io_utils import load_excel_params, load_hdf5_data
+from dualmatfit.utils.io_utils import load_excel_params, load_hdf5_data
 
 
 logger = get_logger('plotting')
@@ -35,6 +35,8 @@ __all__ = [
     'plot_segment_stress_curves',
     'plot_mean_stress_curves',
     'plot_curves_from_xlsx',
+    'ese_plot',
+    'mat_plot',
 ]
 
 # Default configuration for the VariationalFormulation if not fully specified by CSV
@@ -1506,3 +1508,165 @@ if __name__ == "__main__":
         config_name="glb_ipopt_params_mix3_was_isosplit",
         var_form_cfg=custom_vf_config,
     )
+
+
+# --- Functions moved from plot.py ---
+
+from matplotlib.ticker import FormatStrFormatter
+from scipy import interpolate
+
+DEFAULT_STYLE = 'seaborn-v0_8-whitegrid'
+DEFAULT_DPI = 300
+DEFAULT_FIGSIZE = (10, 6)
+DEFAULT_MULTI_FIGSIZE = (12, 10)
+ticks_fontsize = 20
+label_fontsize = 20
+
+def ese_plot(
+        key_ese: list,
+        xdisp: float,
+        label_x: [str],
+        list_xticks: [np.ndarray],
+        pd_aorta_seq: pd.DataFrame,
+):
+    """
+
+    **ARGS**
+    :param key_ese:
+    :param xdisp:
+    :param label_x:
+    :param list_xticks:
+    :param pd_aorta_seq:
+
+    :return:
+    """
+
+    fig, ax = plt.subplots(len(key_ese), figsize=(14, 10), sharex=True, dpi=120)
+    fig.suptitle(f'Aorta Strain Energy Pattern (Inverse of Compliance) x-disp: {np.around(xdisp, 2)}')
+
+    np_loc = np.where(pd_aorta_seq['sum'].values > 0.)[0]
+    np_idx = pd_aorta_seq['idx'].values[np_loc]
+
+    for w, key_w in enumerate(key_ese):
+        np_ese_w = pd_aorta_seq[key_w].values[np_loc]
+
+        ese_max_w = np.around(1.5 * np_ese_w.max(), 2)
+        ese_max_w = max(ese_max_w, 0.01)
+
+        ese_min_w = np.around(0.5 * np_ese_w.min(), 2)
+        if ese_min_w < 0.05:
+            ese_min_w = -0.1 * ese_max_w
+
+        ymin_ticks = np.abs(ese_max_w / 10.)
+        ymax_ticks = 4. * ymin_ticks
+
+        ymajor_ticks_w = np.arange(0., ese_max_w, ymax_ticks)
+        yminor_ticks_w = np.arange(0., ese_max_w, ymin_ticks)
+
+        ax[w].set_xticks(list_xticks[1])
+        ax[w].set_xticks(list_xticks[0], minor=True)
+        ax[w].set_xlim([-0.5, np_idx.max() + 0.5])
+
+        ax[w].set_yticks(ymajor_ticks_w)
+        ax[w].set_yticks(yminor_ticks_w, minor=True)
+        ax[w].set_ylim([ese_min_w, ese_max_w])
+
+        ax[w].grid(which='minor', alpha=0.2)
+        ax[w].grid(which='major', alpha=0.6)
+
+        ax[w].plot(np_idx, np_ese_w, label=key_w)
+        ax[w].plot(np_idx, np_ese_w, 'o', color='red')
+
+        ax[w].legend()
+        ax[w].set_ylabel(key_w)
+        ax[w].yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+
+    ax[-1].set_xlabel('Aorta Section Idx')
+    ax[-1].set_xticklabels(label_x)
+
+    return fig
+
+
+def mat_plot(opt_keys: list,
+             label_x: [str],
+             list_xticks: [np.ndarray],
+             pd_aorta_seq: pd.DataFrame,
+             ):
+    """
+
+    :param opt_keys:
+    :param label_x:
+    :param list_xticks:
+    :param pd_aorta_seq:
+
+    :return:
+    """
+
+    fig, ax = plt.subplots(len(opt_keys), figsize=(14, 10), sharex=True, dpi=120)
+    fig.suptitle('Aorta Material Properties Pattern')
+
+    np_loc = np.where(pd_aorta_seq['sum'].values > 0.)[0]
+    np_idx = pd_aorta_seq['idx'].values[np_loc]
+
+    np_aorta_seq = pd_aorta_seq['idx'].to_numpy(int)
+
+    lst_lsq_spline = []
+
+    for w, key_w in enumerate(opt_keys):
+        np_mat_w = pd_aorta_seq[key_w].values[np_loc]
+
+        if key_w == 'ka':
+            mat_max_w = 0.35
+            mat_min_w = 0.
+
+        elif key_w == 'alpha':
+            np_mat_w = np.rad2deg(np_mat_w)
+            mat_max_w = np.rad2deg(np.pi / 2.)
+            mat_min_w = 0.
+
+        else:
+            mat_max_w = np.around(1.5 * np_mat_w.max(), 4)
+            mat_min_w = np.around(0.5 * np_mat_w.min(), 4)
+
+        ymin_ticks = mat_max_w / 10.
+        ymax_ticks = 4. * ymin_ticks
+
+        ymajor_ticks_w = np.arange(0., mat_max_w, ymax_ticks)
+        yminor_ticks_w = np.arange(0., mat_max_w, ymin_ticks)
+
+        if np_mat_w.shape[0] > 4:
+            spl_w = interpolate.UnivariateSpline(np_idx, np_mat_w, s=4)
+            lsq_spl_w = interpolate.LSQUnivariateSpline(np_idx, np_mat_w, spl_w.get_knots()[1:-1])
+            lst_lsq_spline.append(lsq_spl_w)
+
+        ax[w].set_xticks(list_xticks[1])
+        ax[w].set_xticks(list_xticks[0], minor=True)
+        ax[w].set_xlim([-0.5, np_aorta_seq.max() + 0.5])
+
+        ax[w].set_yticks(ymajor_ticks_w)
+        ax[w].set_yticks(yminor_ticks_w, minor=True)
+        ax[w].set_ylim([mat_min_w, mat_max_w])
+
+        ax[w].grid(which='minor', alpha=0.2)
+        ax[w].grid(which='major', alpha=0.6)
+
+        ax[w].plot(np_idx, np_mat_w, label=key_w)
+        ax[w].plot(np_idx, np_mat_w, 'ro', label='Observations')
+
+        if np_mat_w.shape[0] > 4:
+            ax[w].plot(list_xticks[0], spl_w(list_xticks[0]), label='LSQ - spline')
+
+        ax[w].legend()
+
+        if key_w == 'alpha':
+            ax[w].set_ylabel('alpha (deg)')
+        else:
+            ax[w].set_ylabel(key_w)
+
+        ax[w].yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+
+    ax[-1].set_xlabel('Aorta Section Idx')
+    ax[-1].set_xticklabels(label_x)
+
+    return fig
+

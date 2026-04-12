@@ -2,7 +2,7 @@
 
 import unittest
 import sympy as sy
-from dualmatfit.tensor import TensorManager, IsotropicMaterialModel
+from dualmatfit.formulation.tensor import TensorManager, IsotropicMaterialModel
 
 
 class TestTensorManager(unittest.TestCase):
@@ -112,7 +112,7 @@ class TestTensorManager(unittest.TestCase):
         self.manager.add('F', self.F, F_expr)
 
         # Capture logger output
-        from dualmatfit.tensor import logger as tensor_logger
+        from dualmatfit.formulation.tensor import logger as tensor_logger
         
         log_capture = []
         class LogCapture(logging.Handler):
@@ -162,7 +162,7 @@ class TestTensorManager(unittest.TestCase):
         self.manager.add('list_sym', list_sym, list_expr)
 
         # Capture logger output
-        from dualmatfit.tensor import logger as tensor_logger
+        from dualmatfit.formulation.tensor import logger as tensor_logger
         
         log_capture = []
         class LogCapture(logging.Handler):

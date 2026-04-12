@@ -10,14 +10,14 @@ import pandas as pd
 from typing import Tuple
 
 
-from dualmatfit.drivers import opt_solvers
-# from dualmatfit.solution import Root
-from dualmatfit.experimental import InstronData
-from dualmatfit.least_square import CostFunction, CostIntegrator
-from dualmatfit.material_law import volumetric_strain
-from dualmatfit.variational_form import VariationalFormulation, mixed_strain_energy_functional
-from dualmatfit.extension_solution import ExtensionSolution
-from dualmatfit.plot import PlotSolution2D
+from dualmatfit.optimization.drivers import opt_solvers
+# from dualmatfit.solvers.solution import Root
+from dualmatfit.data.experimental import InstronData
+from dualmatfit.optimization.cost import CostFunction, CostIntegrator
+from dualmatfit.formulation.material_law import volumetric_strain
+from dualmatfit.formulation.variational import VariationalFormulation, mixed_strain_energy_functional
+from dualmatfit.solvers.extension import ExtensionSolution
+from dualmatfit.plotting.solution_visuals import PlotSolution2D
 from dualmatfit.plotting.experimental_visuals import plot_material_fit
 
 

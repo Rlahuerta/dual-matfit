@@ -7,7 +7,7 @@ Note: Uses shared `temp_dir` fixture from conftest.py for temporary directory ha
 
 import pytest
 from pathlib import Path
-from dualmatfit.path_manager import PathConfiguration, PathManager, PathLike, _normalize_path
+from dualmatfit.utils.path_manager import PathConfiguration, PathManager, PathLike, _normalize_path
 
 
 class TestNormalizePath:

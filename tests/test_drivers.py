@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import rosen, rosen_der
 
-from dualmatfit.drivers import opt_solvers
-from dualmatfit.ipopt import IpyoptMinimizer
-from dualmatfit.basinhopping import ipopt_basinhopping, AdaptiveStepSize, StepDisplacement
-from dualmatfit.least_square import CostFunction
+from dualmatfit.optimization.drivers import opt_solvers
+from dualmatfit.optimization.ipopt import IpyoptMinimizer
+from dualmatfit.optimization.basinhopping import ipopt_basinhopping, AdaptiveStepSize, StepDisplacement
+from dualmatfit.optimization.cost import CostFunction
 
 
 # Define Rosenbrock function and its gradient for testing
@@ -250,7 +250,7 @@ def test_step_displacement_bounds():
     print("Testing StepDisplacement bounds enforcement...")
 
     try:
-        from dualmatfit.basinhopping import StepDisplacement
+        from dualmatfit.optimization.basinhopping import StepDisplacement
 
         # Test 1: Basic bounds enforcement
         print("\nTest 1: Basic bounds enforcement")
@@ -343,8 +343,8 @@ def test_basinhopping_integration():
     print("Testing BasinHopping integration with bounds...")
 
     try:
-        from dualmatfit.ipopt import IpyoptMinimizer
-        from dualmatfit.basinhopping import ipopt_basinhopping
+        from dualmatfit.optimization.ipopt import IpyoptMinimizer
+        from dualmatfit.optimization.basinhopping import ipopt_basinhopping
         from scipy.optimize import rosen, rosen_der
 
         # Setup

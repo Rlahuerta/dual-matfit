@@ -41,10 +41,10 @@ from typing import Tuple
 import pickle
 from pathlib import Path
 
-from dualmatfit.tensor import safe_simplify
-from dualmatfit.material_law import volumetric_strain
-from dualmatfit.variational_form import VariationalFormulation, mixed_strain_energy_functional
-from dualmatfit.extension_solution import ExtensionSolution
+from dualmatfit.formulation.tensor import safe_simplify
+from dualmatfit.formulation.material_law import volumetric_strain
+from dualmatfit.formulation.variational import VariationalFormulation, mixed_strain_energy_functional
+from dualmatfit.solvers.extension import ExtensionSolution
 
 # Base directory for solution tests plots
 current_file_path = Path(__file__).parent

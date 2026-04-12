@@ -18,7 +18,7 @@ import numpy as np
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from dualmatfit.io_utils import (
+from dualmatfit.utils.io_utils import (
     load_excel_params,
     load_hdf5_data,
     save_dataframe,

@@ -6,11 +6,11 @@ import sympy as sy
 
 # PyDev debugger warning filter centralized in tests/conftest.py
 
-from dualmatfit.variational_form import VariationalFormulation
-from dualmatfit.extension_solution import ExtensionSolution
-from dualmatfit.least_square import _fdm, adjoint_derivative
-from dualmatfit.material_law import volumetric_strain
-from dualmatfit.tensor import safe_simplify
+from dualmatfit.formulation.variational import VariationalFormulation
+from dualmatfit.solvers.extension import ExtensionSolution
+from dualmatfit.solvers.derivative import _fdm, adjoint_derivative
+from dualmatfit.formulation.material_law import volumetric_strain
+from dualmatfit.formulation.tensor import safe_simplify
 
 
 class TestVariationalFormulation(unittest.TestCase):

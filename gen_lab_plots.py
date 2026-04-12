@@ -12,7 +12,7 @@ from scipy.stats import f_oneway, ttest_ind
 from dualmatfit.plotting.plot_helpers import format_value
 from dualmatfit.plotting.analytical_visuals import get_plot_style_for_sample
 from dualmatfit.plotting.parameters import NAME_SECTIONS
-from dualmatfit.logging_config import get_logger
+from dualmatfit.utils.logging_config import get_logger
 
 logger = get_logger('gen_lab_plots')
 

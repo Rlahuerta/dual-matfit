@@ -7,9 +7,9 @@ import sympy as sy
 # import jax.numpy as jnp
 from jax import config as jax_config
 
-from dualmatfit.variational_form import VariationalFormulation
-from dualmatfit.lambdify_builder import LambdifyBuilder
-from dualmatfit.extension_solution import ExtensionSolution
+from dualmatfit.formulation.variational import VariationalFormulation
+from dualmatfit.formulation.lambdify import LambdifyBuilder
+from dualmatfit.solvers.extension import ExtensionSolution
 
 # Ensure 64-bit for tighter numerical parity
 jax_config.update("jax_enable_x64", True)

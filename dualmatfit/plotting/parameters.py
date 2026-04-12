@@ -15,6 +15,12 @@ __all__ = [
     'DEFAULT_PLOT_LIMITS',
     'stress_dim',
     'rats_ids',
+    'DEFAULT_STYLE',
+    'DEFAULT_DPI',
+    'DEFAULT_FIGSIZE',
+    'DEFAULT_MULTI_FIGSIZE',
+    'ticks_fontsize',
+    'label_fontsize',
 ]
 
 # Consistent color palette (example using seaborn's default)
@@ -73,3 +79,12 @@ DEFAULT_PLOT_LIMITS = {
     'stress_vol': (-0.5, 0.5),   # Volumetric Stress [KPa]
     'stress_ani': (-0.2, 4.2),   # Anisotropic Stress [KPa]
 }
+
+# --- Plotting Configuration from plot.py ---
+DEFAULT_STYLE = 'seaborn-v0_8-whitegrid'
+DEFAULT_DPI = 300
+DEFAULT_FIGSIZE = (10, 6)  # Default figure size for single plots
+DEFAULT_MULTI_FIGSIZE = (12, 10)  # Default for multi-panel plots
+
+ticks_fontsize = 20
+label_fontsize = 20

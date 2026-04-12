@@ -5,7 +5,7 @@ Tests for cost_cache.py - CostCache and LimitedOrderedDict classes.
 import pytest
 import numpy as np
 
-from dualmatfit.cost_cache import CostCache, LimitedOrderedDict
+from dualmatfit.optimization.cache import CostCache, LimitedOrderedDict
 
 
 class TestLimitedOrderedDict:

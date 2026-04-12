@@ -84,7 +84,7 @@ def variational_form_factory(fast_variational_form_args):
     
     The factory automatically applies fast mode settings unless overridden.
     """
-    from dualmatfit.variational_form import VariationalFormulation
+    from dualmatfit.formulation.variational import VariationalFormulation
     
     def _factory(**override_args):
         # Merge fast defaults with user overrides

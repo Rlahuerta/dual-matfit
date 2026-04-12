@@ -7,10 +7,10 @@ import sympy as sy
 from unittest.mock import MagicMock
 from functools import lru_cache
 
-from dualmatfit.least_square import CostFunction, CostIntegrator
-from dualmatfit.variational_form import VariationalFormulation
-from dualmatfit.lambdify_builder import _lambdify
-from dualmatfit.cost_functions import (lsq_fval, lsq_dfval,
+from dualmatfit.optimization.cost import CostFunction, CostIntegrator
+from dualmatfit.formulation.variational import VariationalFormulation
+from dualmatfit.formulation.lambdify import _lambdify
+from dualmatfit.optimization.loss import (lsq_fval, lsq_dfval,
                                       lsq_wise_fval, lsq_wise_dfval,
                                       cauchy_fval, cauchy_dfval,
                                       huber_fval, huber_dfval,

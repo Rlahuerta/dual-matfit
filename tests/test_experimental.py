@@ -6,8 +6,8 @@ import unittest
 import pytest
 
 from scipy.optimize import OptimizeResult
-from dualmatfit.experimental import InstronData, MaterialSetup
-from dualmatfit.material_fit import AnisoMaterialFit
+from dualmatfit.data.experimental import InstronData, MaterialSetup
+from dualmatfit.fitting.core import AnisoMaterialFit
 from dualmatfit.plotting.experimental_visuals import plot_material_fit
 
 # Use Path for all path operations

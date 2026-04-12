@@ -6,9 +6,9 @@ import pandas as pd
 from unittest.mock import MagicMock, patch
 from scipy.optimize import OptimizeResult
 
-from dualmatfit.variational_form import VariationalFormulation
-from dualmatfit.lambdify_builder import LambdifyBuilder
-from dualmatfit.extension_solution import NumericalProblem, ExtensionSolution, _get_initial_guess
+from dualmatfit.formulation.variational import VariationalFormulation
+from dualmatfit.formulation.lambdify import LambdifyBuilder
+from dualmatfit.solvers.extension import NumericalProblem, ExtensionSolution, _get_initial_guess
 
 
 class TestExtensionSolution(unittest.TestCase):

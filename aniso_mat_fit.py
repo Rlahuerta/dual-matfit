@@ -6,8 +6,8 @@ import numpy as np
 from datetime import datetime
 from typing import Dict
 
-from dualmatfit.material_fit import AnisoMaterialFit
-from dualmatfit.logging_config import get_logger
+from dualmatfit.fitting.core import AnisoMaterialFit
+from dualmatfit.utils.logging_config import get_logger
 
 logger = get_logger('aniso_mat_fit')
 warnings.filterwarnings('ignore')

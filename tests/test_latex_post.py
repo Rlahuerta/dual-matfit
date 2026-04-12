@@ -10,7 +10,7 @@ from unittest.mock import patch, MagicMock
 import numpy as np
 import pandas as pd
 
-from dualmatfit.latex_post import (
+from dualmatfit.utils.latex_post import (
     generate_latex_material_props_table,
     generate_latex_dimensions_table,
     generate_latex_dim2_table,

@@ -6,10 +6,10 @@ import unittest
 
 from typing import Union, Tuple, List, Dict, Any, Optional
 from scipy import optimize
-from dualmatfit.plot import PlotSolution2D
-from dualmatfit.variational_form import VariationalFormulation
-from dualmatfit.extension_solution import ExtensionSolution
-from dualmatfit.solution import Root
+from dualmatfit.plotting.solution_visuals import PlotSolution2D
+from dualmatfit.formulation.variational import VariationalFormulation
+from dualmatfit.solvers.extension import ExtensionSolution
+from dualmatfit.solvers.solution import Root
 
 current_file_path = os.path.dirname(os.path.abspath(__file__))
 

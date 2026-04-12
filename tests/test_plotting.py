@@ -10,7 +10,7 @@ from unittest.mock import patch, MagicMock
 from pathlib import Path
 
 from dualmatfit.plotting.experimental_visuals import plot_material_fit, plot_raw_signals
-from dualmatfit.experimental import InstronData
+from dualmatfit.data.experimental import InstronData
 
 # --- Test Data Setup ---
 

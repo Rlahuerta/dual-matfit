@@ -6,14 +6,14 @@ import pytest
 import numpy as np
 from unittest.mock import Mock, MagicMock
 
-from dualmatfit.regularization import (
+from dualmatfit.optimization.regularization import (
     _inv_weight,
     _rsc_weight,
     L2Regularization,
     VolumeRegularization,
     CompositeRegularization,
 )
-from dualmatfit.cost_cache import CostCache
+from dualmatfit.optimization.cache import CostCache
 
 
 class TestWeightFunctions:

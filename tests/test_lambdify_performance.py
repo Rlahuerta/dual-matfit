@@ -18,7 +18,7 @@ from jax import config as jax_config
 # Enable 64-bit precision in JAX to match NumPy's float64 for tighter comparison tolerances
 jax_config.update("jax_enable_x64", True)
 
-from dualmatfit.lambdify_builder import LambdifyBuilder
+from dualmatfit.formulation.lambdify import LambdifyBuilder
 
 
 def bench(fn, args, reps=3):

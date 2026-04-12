@@ -8,9 +8,9 @@ import sympy as sy
 import jax.numpy as jnp
 
 from typing import Sequence, Tuple, List, Dict, Callable, Union, Optional
-from dualmatfit.least_square import LSQFit, CostIntegrator, CostFunction
-from dualmatfit.variational_form import VariationalFormulation
-from dualmatfit.cost_functions import lsq_fval, lsq_dfval
+from dualmatfit.optimization.cost import LSQFit, CostIntegrator, CostFunction
+from dualmatfit.formulation.variational import VariationalFormulation
+from dualmatfit.optimization.loss import lsq_fval, lsq_dfval
 
 
 # module = "numpy"

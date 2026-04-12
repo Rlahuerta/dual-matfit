@@ -9,8 +9,8 @@ import numpy as np
 import sympy as sy
 import matplotlib.pyplot as plt
 
-from dualmatfit.material_law import right_cauchy_fun, get_fiber_vector, heaviside, HeavisideFunction
-from dualmatfit.tensor import safe_simplify
+from dualmatfit.formulation.material_law import right_cauchy_fun, get_fiber_vector, heaviside, HeavisideFunction
+from dualmatfit.formulation.tensor import safe_simplify
 
 current_file_path = os.path.dirname(os.path.abspath(__file__))
 

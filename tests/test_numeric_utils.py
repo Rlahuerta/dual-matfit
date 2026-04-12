@@ -4,7 +4,7 @@
 import pytest
 import numpy as np
 
-from dualmatfit.numeric_utils import (
+from dualmatfit.utils.numeric import (
     sanitize_array,
     sanitize_gradient,
     has_nan,
