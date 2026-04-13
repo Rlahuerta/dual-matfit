@@ -86,7 +86,7 @@ def _quadratic_5d_hessian():
 # ---------------------------------------------------------------------------
 
 class _CostFunctionStub:
-    """Minimal stub to satisfy ``cost_integrator.cost_functions[0].ncontrol``."""
+    """Minimal stub to satisfy ``cost_integrator.cost_fun[0].ncontrol``."""
 
     def __init__(self, ncontrol: int):
         self.ncontrol = ncontrol
@@ -106,7 +106,7 @@ class _FunctionIntegrator:
     def __init__(self, f, n: int, *, ncontrol: int = 100):
         self._f = f
         self.inp_mat_keys = [f'p{i}' for i in range(n)]
-        self.cost_functions = [_CostFunctionStub(ncontrol)]
+        self.list_cost_fun = [_CostFunctionStub(ncontrol)]
 
     def _cost_function(self, xi):
         return float(self._f(xi))
@@ -476,7 +476,7 @@ class _MockIntegrator:
         self._X = np.asarray(X, dtype=float)
         self._y = np.asarray(y, dtype=float)
         self._alpha = None
-        self.cost_functions = [_CostFunctionStub(ncontrol=len(y))]
+        self.cost_fun = [_CostFunctionStub(ncontrol=len(y))]
         # OLS solution
         self.xi = np.linalg.lstsq(self._X, self._y, rcond=None)[0]
 
@@ -1054,7 +1054,7 @@ class TestFormatParamsWithUncertainty:
     """Tests for format_params_with_uncertainty() DataFrame helper."""
 
     def test_adds_se_columns(self):
-        """SE columns named '<param> ± σ' should appear for every parameter."""
+        """SE columns named '<param> +/- sigma' should appear for every parameter."""
         from dualmatfit.fitting.covariance import format_params_with_uncertainty
         params = pd.Series({'mu': 23.6, 'k_1': 32.5, 'alpha': 5.0})
         V = np.diag([1.0, 4.0, 0.25])
@@ -1077,9 +1077,9 @@ class TestFormatParamsWithUncertainty:
         )
         df = format_params_with_uncertainty(params, report)
         assert 'mu' in df.columns
-        assert 'mu ± σ' in df.columns
-        assert 'k_1 ± σ' in df.columns
-        assert 'alpha ± σ' in df.columns
+        assert 'mu +/- sigma' in df.columns
+        assert 'k_1 +/- sigma' in df.columns
+        assert 'alpha +/- sigma' in df.columns
 
     def test_se_values_correct(self):
         """SE values should match √diag(V)."""
@@ -1104,8 +1104,8 @@ class TestFormatParamsWithUncertainty:
             method='accurate',
         )
         df = format_params_with_uncertainty(params, report)
-        assert df['a ± σ'].iloc[0] == pytest.approx(2.0)
-        assert df['b ± σ'].iloc[0] == pytest.approx(3.0)
+        assert df['a +/- sigma'].iloc[0] == pytest.approx(2.0)
+        assert df['b +/- sigma'].iloc[0] == pytest.approx(3.0)
 
     def test_returns_single_row_dataframe(self):
         from dualmatfit.fitting.covariance import format_params_with_uncertainty
@@ -1195,7 +1195,7 @@ class TestCovarianceSummaryTable:
         assert len(df) == 3
         assert set(df.index) == {'Ar-A', 'Ar-B', 'Tr-A'}
         assert 'mu' in df.columns
-        assert 'mu ± σ' in df.columns
+        assert 'mu +/- sigma' in df.columns
 
     def test_empty_reports_returns_empty(self):
         from dualmatfit.fitting.covariance import build_covariance_summary_table

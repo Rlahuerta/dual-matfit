@@ -215,7 +215,7 @@ class PathManager:
         >>> PathManager.project_root()
         Path('/home/user/DualMatFit')
         """
-        return Path(__file__).resolve().parent.parent
+        return Path(__file__).resolve().parent.parent.parent
     
     def ensure_dir(self, path: PathLike) -> Path:
         """

@@ -233,8 +233,16 @@ def analyze_cost_integrator(
         Parameter names used for the focused two-parameter coupling summary.
     """
 
-    np_fval = integrator._cost_function(xi, fsum=False)
-    np_jacobian = integrator._cost_function_diff(xi, fsum=False)
+    np_fval = integrator._cost_function(xi)
+    np_jacobian_raw = integrator._residuum_diff(xi)
+
+    # Reshape 3D (n_funcs, n_control, n_params) to 2D (n_obs, n_params)
+    if np_jacobian_raw.ndim == 3:
+        np_jacobian = np_jacobian_raw.reshape(-1, np_jacobian_raw.shape[-1])
+    elif np_jacobian_raw.ndim == 2:
+        np_jacobian = np_jacobian_raw
+    else:
+        np_jacobian = np_jacobian_raw.reshape(1, -1)
 
     param_names = integrator.inp_mat_keys
     param_idx = np.array(
@@ -248,7 +256,7 @@ def analyze_cost_integrator(
 
     singular_values = np.asarray(np.linalg.svd(gauss_newton_hessian_bk1, compute_uv=False), dtype=float)
     smallest_singular_value = float(singular_values[-1]) if singular_values.size else 0.0
-    est_res_variance = 2 * np_fval.sum() / (integrator.cost_functions[0].ncontrol - param_idx.shape[0])
+    est_res_variance = 2 * np.sum(np_fval) / (integrator.cost_function[0].ncontrol - param_idx.shape[0])
 
     covar_matrix = np.sqrt(est_res_variance) * np.linalg.pinv(gauss_newton_hessian_bk1)
     std_error = np.sqrt(np.linalg.diagonal(covar_matrix))
@@ -267,7 +275,7 @@ def analyze_cost_integrator(
 
     conditioning_report = ConditioningReport(
         param_names=param_names,
-        cost=np_fval.sum(),
+        cost=np.sum(np_fval),
         jacobian=np_jacobian.copy(),
         singular_values=singular_values.copy(),
         hessian=gauss_newton_hessian_bk1.copy(),

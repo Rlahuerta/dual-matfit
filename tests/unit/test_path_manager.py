@@ -206,7 +206,7 @@ class TestPathManagerNewMethods:
         root = PathManager.project_root()
         assert root.is_absolute()
         # Should contain dualmatfit package
-        assert (root / 'dualmatfit').exists() or root.name == 'DualMatFit'
+        assert (root / 'dualmatfit').exists() or root.name == 'dual-matfit'
     
     def test_ensure_parent_dir(self, temp_dir):
         """Test ensure_parent_dir method."""

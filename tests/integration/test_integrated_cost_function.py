@@ -466,15 +466,15 @@ class TestLSQIntegrator(unittest.TestCase):
 
             for i, c_i in enumerate([10, 20, 40, 60, 80]):
                 print(f"c: {c_i}, mix: {mix_k}")
-                lsq_int_fun_ki, pd_xi_ki = self._setup_cfun_integration(mix_k, ftype, c=c_i, alpha=0., dvol=dvol_flag)
-                inp_mat_keys_ki = lsq_int_fun_ki.inp_mat_keys
+                int_cost_fun_ki, pd_xi_ki = self._setup_cfun_integration(mix_k, ftype, c=c_i, alpha=0., dvol=dvol_flag)
+                inp_mat_keys_ki = int_cost_fun_ki.inp_mat_keys
 
                 xi = pd_xi_ki.loc[inp_mat_keys_ki, "values"].values
 
-                fval_ki = lsq_int_fun_ki(xi)
+                fval_ki = int_cost_fun_ki(xi)
 
                 # Local derivative verification
-                for fun_j in lsq_int_fun_ki.lsq_mat_fun:
+                for fun_j in int_cost_fun_ki.cost_function:
                     # res_j = fun_j.residuum(xi)
 
                     np_adj_res_grad_j = fun_j.residuum_diff(xi)
@@ -482,16 +482,16 @@ class TestLSQIntegrator(unittest.TestCase):
 
                     np.testing.assert_almost_equal(np_adj_res_grad_j, np_fdm_res_grad_j, decimal=5)
 
-                np_adj_res_ki = lsq_int_fun_ki._residuum_diff(xi)
-                np_fdm_res_ki = lsq_int_fun_ki._residuum_diff(xi, fdm=True, h=1.e-4)
+                np_adj_res_ki = int_cost_fun_ki._residuum_diff(xi)
+                np_fdm_res_ki = int_cost_fun_ki._residuum_diff(xi, fdm=True, h=1.e-4)
                 np.testing.assert_almost_equal(np_adj_res_ki, np_fdm_res_ki, decimal=5)
 
                 if mix_k == 3:
-                    np_adj_res_grad_ki = lsq_int_fun_ki._cost_function_diff(xi)
-                    np_fdm_res_grad_ki = lsq_int_fun_ki._cost_function_diff(xi, fdm=True, h=1.e-4)
+                    np_adj_res_grad_ki = int_cost_fun_ki._cost_function_diff(xi)
+                    np_fdm_res_grad_ki = int_cost_fun_ki._cost_function_diff(xi, fdm=True, h=1.e-4)
                     np.testing.assert_almost_equal(np_adj_res_grad_ki, np_fdm_res_grad_ki, decimal=5)
 
-                    for fun_j in lsq_int_fun_ki.lsq_mat_fun:
+                    for fun_j in int_cost_fun_ki.cost_function:
                         np_adj_vol_grad_j = fun_j.volume_diff(xi)
                         np_fdm_vol_grad_j = fun_j.volume_diff(xi, fdm=True, h=1.e-4)
                         np.testing.assert_almost_equal(np_adj_vol_grad_j, np_fdm_vol_grad_j, decimal=5)
@@ -500,8 +500,8 @@ class TestLSQIntegrator(unittest.TestCase):
                         np_fdm_res_grad_j = fun_j.residuum_diff(xi, fdm=True, h=1.e-4)
                         np.testing.assert_almost_equal(np_adj_res_grad_j, np_fdm_res_grad_j, decimal=5)
 
-                np_adj_dfval_ki = lsq_int_fun_ki._cost_function_diff(xi)
-                np_fdm_dfval_ki = lsq_int_fun_ki._cost_function_diff(xi, fdm=True, h=1.e-4)
+                np_adj_dfval_ki = int_cost_fun_ki._cost_function_diff(xi)
+                np_fdm_dfval_ki = int_cost_fun_ki._cost_function_diff(xi, fdm=True, h=1.e-4)
 
                 np.testing.assert_array_almost_equal(np_adj_dfval_ki, np_fdm_dfval_ki, decimal=3, err_msg=f"c: {c_i}")
 
@@ -515,22 +515,22 @@ class TestLSQIntegrator(unittest.TestCase):
 
         # L2 Regularization with alpha > 0
         np.random.seed(self.seed)
-        lsq_int_fun_m1_lsq, pd_xi = self._setup_cfun_integration(mix=1, ftype='lsq_sum', alpha=1.0)
-        pd_xi_ord = pd_xi.loc[lsq_int_fun_m1_lsq.inp_mat_keys, :]
+        int_cost_fun_m1_lsq_sum, pd_xi = self._setup_cfun_integration(mix=1, ftype='lsq_sum', alpha=1.0)
+        pd_xi_ord = pd_xi.loc[int_cost_fun_m1_lsq_sum.inp_mat_keys, :]
 
         dxi = np.diff(pd_xi_ord.loc[:, ['lower', 'upper']].values)[:, 0]
         xi = np.random.rand(dxi.shape[0]) * dxi + pd_xi_ord.loc[:, 'lower'].values
         xi_0 = pd_xi_ord.loc[:, "values"].values
 
         # Use the new regularization interface
-        reg_fval = lsq_int_fun_m1_lsq._regularization.value(xi)
-        np_adj_dfval = lsq_int_fun_m1_lsq._regularization.gradient(xi)
-        np_fdm_dfval = lsq_int_fun_m1_lsq._regularization.gradient(xi, fdm=True, h=1.e-3)
+        reg_fval = int_cost_fun_m1_lsq_sum._regularization.value(xi)
+        np_adj_dfval = int_cost_fun_m1_lsq_sum._regularization.gradient(xi)
+        np_fdm_dfval = int_cost_fun_m1_lsq_sum._regularization.gradient(xi, fdm=True, h=1.e-3)
         np.testing.assert_array_almost_equal(np_adj_dfval, np_fdm_dfval, decimal=4)
 
-        reg_fval_0 = lsq_int_fun_m1_lsq._regularization.value(xi_0)
-        np_adj_dfval_0 = lsq_int_fun_m1_lsq._regularization.gradient(xi_0)
-        np_fdm_dfval_0 = lsq_int_fun_m1_lsq._regularization.gradient(xi_0, fdm=True, h=1.e-3)
+        reg_fval_0 = int_cost_fun_m1_lsq_sum._regularization.value(xi_0)
+        np_adj_dfval_0 = int_cost_fun_m1_lsq_sum._regularization.gradient(xi_0)
+        np_fdm_dfval_0 = int_cost_fun_m1_lsq_sum._regularization.gradient(xi_0, fdm=True, h=1.e-3)
         np.testing.assert_array_almost_equal(np_adj_dfval_0, np_fdm_dfval_0, decimal=4)
 
         self.assertGreater(reg_fval, reg_fval_0)
@@ -540,21 +540,21 @@ class TestLSQIntegrator(unittest.TestCase):
     def test_volume_regularization(self):
 
         # Volume Regularization - requires vol_reg=True AND epsilon > 0
-        lsq_int_fun, pd_xi = self._setup_cfun_integration(mix=3, ftype='lsq_sum', dvol=True, vol_reg=True)
+        int_fun_lsq, pd_xi = self._setup_cfun_integration(mix=3, ftype='lsq_sum', dvol=True, vol_reg=True)
         
         # Need to set epsilon to enable volume regularization
-        lsq_int_fun._epsilon = 1.0
+        int_fun_lsq._epsilon = 1.0
         # Rebuild regularization with new epsilon
-        lsq_int_fun._regularization = lsq_int_fun._build_regularization()
+        int_fun_lsq._regularization = int_fun_lsq._build_regularization(vol_reg=True, epsilon=1.0)
         
-        pd_xi_ord = pd_xi.loc[lsq_int_fun.inp_mat_keys, :]
+        pd_xi_ord = pd_xi.loc[int_fun_lsq.inp_mat_keys, :]
         xi_0 = pd_xi_ord.loc[:, "values"].values
 
         strain_vol_energy = []
 
         list_adj_grad = []
         list_fdm_grad = []
-        for fun_i in lsq_int_fun.lsq_mat_fun:
+        for fun_i in int_fun_lsq.cost_function:
             strain_vol_energy.append(fun_i.volume(xi_0))
             np_adj_grad_i = fun_i.volume_diff(xi_0)
             np_fdm_grad_i = fun_i.volume_diff(xi_0, fdm=True, h=1.e-5)
@@ -564,10 +564,10 @@ class TestLSQIntegrator(unittest.TestCase):
             list_fdm_grad.append(np_fdm_grad_i)
 
         # Use the new regularization interface for volume regularization
-        svol_fval = lsq_int_fun._regularization.value(xi_0)
+        svol_fval = int_fun_lsq._regularization.value(xi_0)
 
-        np_svol_adj_dfval = lsq_int_fun._regularization.gradient(xi_0)
-        np_svol_fdm_dfval = lsq_int_fun._regularization.gradient(xi=xi_0, fdm=True, h=1.e-5)
+        np_svol_adj_dfval = int_fun_lsq._regularization.gradient(xi_0)
+        np_svol_fdm_dfval = int_fun_lsq._regularization.gradient(xi=xi_0, fdm=True, h=1.e-5)
 
         self.assertGreater(svol_fval, 0.)
         np.testing.assert_array_almost_equal(np_svol_adj_dfval, np_svol_fdm_dfval, decimal=4)
@@ -576,14 +576,14 @@ class TestLSQIntegrator(unittest.TestCase):
         """Ensure gradient accumulation uses vector derivative (reg_dfval) not scalar reg_fval (regression test)."""
         # Setup integrator with alpha > 0 (no volume regularization to isolate effect)
         alpha = 0.5
-        lsq_int_fun, pd_xi = self._setup_cfun_integration(mix=1, ftype='lsq_sum', alpha=alpha, dvol=False)
-        xi = pd_xi.loc[lsq_int_fun.inp_mat_keys, "values"].values.copy()
+        int_fun_lsq, pd_xi = self._setup_cfun_integration(mix=1, ftype='lsq_sum', alpha=alpha, dvol=False)
+        xi = pd_xi.loc[int_fun_lsq.inp_mat_keys, "values"].values.copy()
 
         # Get analytic cost function gradient
-        np_adj_grad = lsq_int_fun._cost_function_diff(xi)
+        np_adj_grad = int_fun_lsq._cost_function_diff(xi)
 
         # Finite difference gradient of full cost (including Tikhonov)
-        np_fdm_grad = lsq_int_fun._cost_function_diff(xi, fdm=True, h=1.e-5)
+        np_fdm_grad = int_fun_lsq._cost_function_diff(xi, fdm=True, h=1.e-5)
 
         # Compare gradients (loose tolerance due to numerical diff)
         np.testing.assert_allclose(np_fdm_grad, np_adj_grad, rtol=1e-4, atol=1e-5,
@@ -591,10 +591,10 @@ class TestLSQIntegrator(unittest.TestCase):
 
         # Sanity: regularization term increases cost if we move away from xi (shift by small perturbation)
         # Get cost function
-        fval = lsq_int_fun._cost_function(xi)
+        fval = int_fun_lsq._cost_function(xi)
 
         xi_pert = xi + 1.e-2
-        fval_pert = lsq_int_fun._cost_function(xi_pert)
+        fval_pert = int_fun_lsq._cost_function(xi_pert)
         self.assertNotEqual(fval_pert, fval)
 
         # Also test with volume regularization active simultaneously
