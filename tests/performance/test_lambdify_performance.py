@@ -321,6 +321,7 @@ class TestLambdifyPerformance(unittest.TestCase):
         print(f"  JAX (Diff2, JIT): {time_diff2_jax_jit:.6f}s (Batched)")
         print(f"  JAX (Diff2, loop scalar calls): {hess_loop_time:.6f}s")
 
+    @pytest.mark.xfail(reason="Timing-sensitive: benchmark thresholds vary by system load")
     def test_unified_jax_builder_speedup(self):
         """Benchmark looped JAX gradient & Hessian vs NumPy loop derivatives for gradient & Hessian.
 

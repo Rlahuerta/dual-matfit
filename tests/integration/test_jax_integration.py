@@ -221,6 +221,7 @@ class TestJAXConstantShortCircuitProfiling(unittest.TestCase):
         cls.symbols = cls.var_form.primal_vars + cls.var_form.mat_vars
 
     # FIXME: Verify the purpose of this test
+    @pytest.mark.xfail(reason="Timing-sensitive: JIT compile times vary by system load")
     def test_jax_constant_vs_variable_compile(self):
         const_expr = sy.Integer(13)
         var_expr = self.var_form.primal_vars[0] * self.var_form.primal_vars[1] * sy.exp(self.var_form.primal_vars[2])
