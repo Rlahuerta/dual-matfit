@@ -1,0 +1,1 @@
+# Scripts package — allows `from scripts._analytical_runtime import ...` patterns.
