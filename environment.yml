@@ -33,6 +33,7 @@ dependencies:
   - pathos>=0.3.2
   - multiprocess>=0.70.17
   - timeout-decorator>=0.5.0
+  - filelock>=3.16.1
   - setuptools>=74.1.2
   - cython>=3.0.0
 
