@@ -295,7 +295,7 @@ To:
         # Add volume regularization if enabled
         if self._dvol and self._epsilon > 0:
             vol_reg = VolumeRegularization(
-                cost_functions=self.lsq_mat_fun,
+                cost_functions=self.cost_function,
                 epsilon=self._epsilon,
                 xi_bounds=self.xi_bounds,
                 cache=self._cache,

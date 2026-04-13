@@ -846,7 +846,7 @@ def robust_covariance_from_cost(
     # Confidence intervals: xi pm t_{alpha/2, dof} x SE, clipped to design bounds
     n_params = len(integrator.inp_mat_keys)
     try:
-        n_obs = sum(cf.ncontrol for cf in integrator.cost_functions)
+        n_obs = sum(cf.ncontrol for cf in integrator.cost_function)
     except (AttributeError, TypeError):
         n_obs = n_params + 1  # minimal fallback
 

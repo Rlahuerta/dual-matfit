@@ -13,6 +13,8 @@ import warnings
 import numpy as np
 import pandas as pd
 import jax
+# import jax.numpy as jnp
+from jax import jacobian
 jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")
 # import sympy.printing as latex_print
@@ -20,9 +22,6 @@ jax.config.update("jax_platform_name", "cpu")
 from functools import lru_cache
 from typing import Tuple, Sequence, Callable, Union, Optional, Any
 from scipy import optimize
-
-# import jax.numpy as jnp
-from jax import jacobian
 
 from dualmatfit.formulation.variational import VariationalFormulation
 from dualmatfit.solvers.extension import ExtensionSolution, DesignVariablesMixin
@@ -275,7 +274,7 @@ class CostFunction(DesignVariablesMixin, ExtensionSolution):
         """
 
         self.dsvars = dsvars.loc[self.inp_mat_keys, :]
-        self.xi_ref = self.dsvars["values"].values.astype(float)
+        self.xi_ref = self.dsvars["values"].values.astype(float).copy()
         self.run_dsvars = self.dsvars["variable"].values.astype(bool)
 
         self.nvars = np.count_nonzero(self.run_dsvars)
@@ -297,8 +296,10 @@ class CostFunction(DesignVariablesMixin, ExtensionSolution):
         np_xi_mat = np.array(xi_mat, dtype=float).reshape(self.xi_ref.shape)
         np_stretch_x = np.sort(np.array(stretch_x, dtype=float))
 
-        sr_xi_mat = self.dsvars["values"][self.run_dsvars].copy().astype(float)
-        sr_xi_mat.values[:] = np_xi_mat
+        # Build a writable Series from the design variables slice
+        _sr = self.dsvars["values"][self.run_dsvars]
+        sr_xi_mat = pd.Series(_sr.values.astype(float).copy(), index=_sr.index)
+        sr_xi_mat[:] = np_xi_mat
 
         # Solve the problem using the parent class's solve method
         result = self.solve(mat_params=sr_xi_mat, stretch_x=np_stretch_x, max_iter=1000, **kwargs)
@@ -628,7 +629,7 @@ class CostIntegrator:
         self.nvars = self.xi.shape[0]
         self.inp_mat_keys = lsq_mat_fun[0].inp_mat_keys.copy()
 
-        self.lsq_mat_fun = lsq_mat_fun
+        self.cost_function = lsq_mat_fun
         self._ftype = ftype
 
         # --- Setup Bounds ---
@@ -681,14 +682,14 @@ class CostIntegrator:
                 rescale=self._rescale,
                 beta=self._beta,
                 xi_bounds=self.xi_bounds,
-                multi_objective=(len(self.lsq_mat_fun) > 1),
+                multi_objective=(len(self.cost_function) > 1),
             )
             regularization.add_strategy(l2_reg)
 
         # Add volume regularization if enabled
         if vol_reg and epsilon > 0.:
             vol_strategy = VolumeRegularization(
-                cost_functions=self.cost_functions,
+                cost_functions=self.cost_function,
                 epsilon=epsilon,
                 xi_bounds=self.xi_bounds,
                 cache=self._cache,
@@ -699,7 +700,7 @@ class CostIntegrator:
 
     def _check_bounds(self) -> None:
         # bounds search
-        for fun_i in self.lsq_mat_fun:
+        for fun_i in self.cost_function:
             if fun_i.xi_bounds is not None:
                 if self.xi_bounds is None:
                     self.xi_bounds = fun_i.xi_bounds.copy()
@@ -770,7 +771,7 @@ class CostIntegrator:
 
         # Compute residuum for all cost functions
         list_resi = []
-        for fun_i in self.lsq_mat_fun:
+        for fun_i in self.cost_function:
             list_resi.append(sanitize_array(fun_i.residuum(xi)))
 
         np_resi = np.asarray(list_resi, dtype=float)
@@ -804,7 +805,7 @@ class CostIntegrator:
 
         # Compute residuum derivative for all cost functions
         list_resi_diff = []
-        for fun_i in self.lsq_mat_fun:
+        for fun_i in self.cost_function:
             resi_diff_i = sanitize_array(fun_i.residuum_diff(xi, fdm=fdm, **kwargs))
             list_resi_diff.append(resi_diff_i)
 
@@ -947,7 +948,7 @@ class CostIntegrator:
         # We need to gather all residuals from each function
         if self._mobj:
             # FIXME: Remove _map_residuum_function, use a loop instead
-            list_args = [(i, self._fid, fun_i, xi, 0) for i, fun_i in enumerate(self.lsq_mat_fun)]
+            list_args = [(i, self._fid, fun_i, xi, 0) for i, fun_i in enumerate(self.cost_function)]
             results = map(self._map_residuum_function, list_args)
             list_residuum, _ = zip(*results)  # We don't need the derivative part
 
@@ -959,7 +960,7 @@ class CostIntegrator:
             all_resid_nw = self._residuum(xi)
         else:
             # Single cost function
-            all_resid = self.lsq_mat_fun[-1].residuum(xi)
+            all_resid = self.cost_function[-1].residuum(xi)
 
         # Compute MSE
         # 1) sum of squares
@@ -995,7 +996,7 @@ class CostIntegrator:
         if self._mobj:
             fval = self._cost_function(xi)
         else:
-            fval = self.lsq_mat_fun[-1](xi)
+            fval = self.cost_function[-1](xi)
 
         return fval.item()
 
@@ -1027,7 +1028,7 @@ class CostIntegrator:
         if self._mobj:
             np_eqv_dfun = self._cost_function_diff(xi)
         else:
-            np_eqv_dfun = self.lsq_mat_fun.derivative(xi)
+            np_eqv_dfun = self.cost_function.derivative(xi)
 
         if df_xi is not None:
             df_xi[:] = np_eqv_dfun.astype(float)

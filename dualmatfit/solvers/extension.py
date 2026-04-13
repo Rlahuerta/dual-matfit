@@ -152,7 +152,7 @@ class DesignVariablesMixin:
         self.nvars = np.count_nonzero(self.run_dsvars)
 
         self.xi = self.dsvars["values"][self.run_dsvars].values.astype(float)
-        self.xi_ref = self.dsvars["baseline"].values.astype(float)
+        self.xi_ref = self.dsvars["baseline"].values.astype(float).copy()
         self.xi_bounds = dsvars[self.run_dsvars][["lower", "upper"]].values.tolist()
 
     def _update_design_variables(self, xi: np.ndarray) -> pd.Series:

@@ -287,7 +287,7 @@ class TestCostIntegratorCache:
         integrator = CostIntegrator([mock_cost_function], alpha=1.0)
         integrator.xi_ref = xi_0
         # Rebuild regularization with updated xi_ref
-        integrator._regularization = integrator._build_regularization()
+        integrator._regularization = integrator._build_regularization(vol_reg=False, epsilon=0.0)
 
         # Use the new regularization interface
         reg_val = integrator._regularization.value(xi)
