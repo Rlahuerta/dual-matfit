@@ -94,12 +94,12 @@ class TestMockLSQIntegrator(unittest.TestCase):
 
         # Single cost function integrator
         self.lsq_fun = LSQFit(10, 0.2, self.mat_params, xlog_fun, seed=self.seed)
-        self.single_cost_fun_integrator = CostIntegrator(lsq_mat_fun=[self.lsq_fun])
+        self.single_cost_fun_integrator = CostIntegrator(mat_cost_fun=[self.lsq_fun])
 
         # Multiple cost functions
         self.list_delta = [0.05, 0.03, -0.15]
         self.list_lsq_fun = [LSQFit(10, dt_i, self.mat_params, xlog_fun, seed=self.seed) for dt_i in self.list_delta]
-        self.multi_cost_fun_integrator = CostIntegrator(lsq_mat_fun=self.list_lsq_fun, ftype=self.ftype)
+        self.multi_cost_fun_integrator = CostIntegrator(mat_cost_fun=self.list_lsq_fun, ftype=self.ftype)
 
     @staticmethod
     def _fun_ln_sum(residuum: np.ndarray, residuum_diff: np.ndarray = None, weight: np.ndarray = None) -> (float, np.ndarray):
@@ -440,8 +440,7 @@ class TestLSQIntegrator(unittest.TestCase):
             dtype='adjoint',
         )
 
-        lsq_int_fun = CostIntegrator(dsvars=mat_params,
-                                     lsq_mat_fun=[least_square_func1, least_square_func2],
+        lsq_int_fun = CostIntegrator(mat_cost_fun=[least_square_func1, least_square_func2],
                                      ftype=ftype,
                                      c=c,
                                      alpha=alpha,

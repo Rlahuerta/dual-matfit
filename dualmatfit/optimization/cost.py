@@ -589,7 +589,7 @@ class CostIntegrator:
     """
 
     def __init__(self,
-                 lsq_mat_fun: Sequence[CostFunction | LSQFit],
+                 mat_cost_fun: Sequence[CostFunction | LSQFit],
                  ftype: str = 'lsq',
                  fid: Optional[int] = None,
                  vol_reg: bool = False,
@@ -602,7 +602,7 @@ class CostIntegrator:
 
         Args:
             xi: Initial design variables array.
-            lsq_mat_fun: Sequence of Cost Function objects.
+            mat_cost_fun: Sequence of Cost Function objects.
             ftype: Type of the cost function ('lsq', 'ln', 'cauchy', etc.).
             fid: Index of the primary function to focus on (if stab < 1).
             vol_reg: Flag to include volume regularization.
@@ -614,22 +614,22 @@ class CostIntegrator:
             ValueError: If bounds are incorrectly specified.
         """
         # --- Validate Inputs ---
-        if not isinstance(lsq_mat_fun, list):
+        if not isinstance(mat_cost_fun, list):
             raise TypeError(
                 f'LSQ function must be a list of LSQ function objects, '
-                f'got {type(lsq_mat_fun).__name__}'
+                f'got {type(mat_cost_fun).__name__}'
             )
 
-        if not lsq_mat_fun:
-            raise ValueError('lsq_mat_fun list cannot be empty - at least one LSQ function is required')
+        if not mat_cost_fun:
+            raise ValueError('mat_cost_fun list cannot be empty - at least one LSQ function is required')
 
         # --- Initialize Design Variables ---
-        self.xi = lsq_mat_fun[0].xi.copy()
-        self.xi_ref = self.xi.copy()
+        self.xi = mat_cost_fun[0].xi.copy()
+        self.xi_ref = mat_cost_fun[0].xi_ref.copy()
         self.nvars = self.xi.shape[0]
-        self.inp_mat_keys = lsq_mat_fun[0].inp_mat_keys.copy()
+        self.inp_mat_keys = mat_cost_fun[0].inp_mat_keys.copy()
 
-        self.cost_function = lsq_mat_fun
+        self.cost_functions = mat_cost_fun
         self._ftype = ftype
 
         # --- Setup Bounds ---
@@ -638,10 +638,10 @@ class CostIntegrator:
 
         # --- Configure Function Indices ---
         if fid is None:
-            self._fid = np.arange(len(lsq_mat_fun))
+            self._fid = np.arange(len(mat_cost_fun))
         elif isinstance(fid, int):
-            if not 0 <= fid < len(lsq_mat_fun):
-                raise ValueError(f"fid {fid} is out of range for lsq_mat_fun list of size {len(lsq_mat_fun)}")
+            if not 0 <= fid < len(mat_cost_fun):
+                raise ValueError(f"fid {fid} is out of range for mat_cost_fun list of size {len(mat_cost_fun)}")
             self._fid = np.array([fid])
         else:
             raise ValueError(
@@ -649,7 +649,7 @@ class CostIntegrator:
             )
 
         # --- Configure Regularization Parameters ---
-        self._mobj = len(lsq_mat_fun) > 0
+        self._mobj = len(mat_cost_fun) > 0
         self._iter = 0
         self._rescale = rescale
         self._dvol = vol_reg
@@ -682,14 +682,14 @@ class CostIntegrator:
                 rescale=self._rescale,
                 beta=self._beta,
                 xi_bounds=self.xi_bounds,
-                multi_objective=(len(self.cost_function) > 1),
+                multi_objective=(len(self.cost_functions) > 1),
             )
             regularization.add_strategy(l2_reg)
 
         # Add volume regularization if enabled
         if vol_reg and epsilon > 0.:
             vol_strategy = VolumeRegularization(
-                cost_functions=self.cost_function,
+                cost_functions=self.cost_functions,
                 epsilon=epsilon,
                 xi_bounds=self.xi_bounds,
                 cache=self._cache,
@@ -700,7 +700,7 @@ class CostIntegrator:
 
     def _check_bounds(self) -> None:
         # bounds search
-        for fun_i in self.cost_function:
+        for fun_i in self.cost_functions:
             if fun_i.xi_bounds is not None:
                 if self.xi_bounds is None:
                     self.xi_bounds = fun_i.xi_bounds.copy()
@@ -751,7 +751,7 @@ class CostIntegrator:
         Aggregate residua from all cost functions with caching.
         
         This method collects residuum values from each cost function in
-        `lsq_mat_fun` and caches the result for efficiency.
+        `mat_cost_fun` and caches the result for efficiency.
         
         Parameters
         ----------
@@ -771,7 +771,7 @@ class CostIntegrator:
 
         # Compute residuum for all cost functions
         list_resi = []
-        for fun_i in self.cost_function:
+        for fun_i in self.cost_functions:
             list_resi.append(sanitize_array(fun_i.residuum(xi)))
 
         np_resi = np.asarray(list_resi, dtype=float)
@@ -805,7 +805,7 @@ class CostIntegrator:
 
         # Compute residuum derivative for all cost functions
         list_resi_diff = []
-        for fun_i in self.cost_function:
+        for fun_i in self.cost_functions:
             resi_diff_i = sanitize_array(fun_i.residuum_diff(xi, fdm=fdm, **kwargs))
             list_resi_diff.append(resi_diff_i)
 
@@ -860,40 +860,40 @@ class CostIntegrator:
         return np_residuum_i, np_residuum_diff_i
 
     def _sum_function(self, residuum: np.ndarray) -> float:
-        return self._function_type(residuum)
+        return self._function_type(residuum).sum().item()
 
     def _sum_function_diff(self, residuum: np.ndarray, residuum_diff: np.ndarray) -> np.ndarray:
-        return sanitize_array(self._function_type_diff(residuum, residuum_diff))
+        return sanitize_array(self._function_type_diff(residuum, residuum_diff).sum(axis=0))
 
-    def _cost_function(self, xi: np.ndarray) -> float:
+    def _cost_function(self, xi: np.ndarray, fsum: bool = True) -> float | np.ndarray:
         """
-        Compute the cost function and its derivative.
+        Compute the cost function value.
 
         Args:
             xi (np.ndarray): Current value of variables.
+            fsum (bool): If True (default), return a scalar total cost. If False,
+                return a per-function array so callers can inspect individual
+                contributions (e.g. for residual variance estimation).
 
         Returns:
-            float : Function value
+            float | np.ndarray: Scalar cost (fsum=True) or per-function array (fsum=False).
 
         Raises:
             ValueError: If invalid ftype is specified.
         """
 
         np_resi = self._residuum(xi)
-
-        if 'sum' in self._ftype or 'robust' in self._ftype:
-            cost_fval = self._sum_function(np_resi)
-        # elif 'ks' in self._ftype:
-        #     cost_fval = self._ks_sum_function(np_resi)
-        else:
-            cost_fval = self._function_type(np_resi)
-
-        # Add regularization using the composite strategy
         reg_value = self._regularization.value(xi)
 
-        return cost_fval + reg_value
+        if fsum:
+            cost_fval = self._sum_function(np_resi)
+            return cost_fval + reg_value
+        else:
+            cost_fval_array = self._function_type(np_resi)
+            return cost_fval_array + reg_value / cost_fval_array.shape[0]
 
-    def _cost_function_diff(self, xi: np.ndarray, fdm: bool = False, **kwargs) -> np.ndarray:
+    def _cost_function_diff(self, xi: np.ndarray, fdm: bool = False,
+                            fsum: bool = True, freg: bool = True, **kwargs) -> np.ndarray:
 
         if not isinstance(xi, np.ndarray):
             raise TypeError(
@@ -903,31 +903,30 @@ class CostIntegrator:
         if not fdm:
             np_resi = self._residuum(xi)
             np_resi_diff = self._residuum_diff(xi)
-
-            if 'sum' in self._ftype or 'robust' in self._ftype:
-                np_cost_dfval = self._sum_function_diff(np_resi, np_resi_diff)
-            # elif 'ks' in self._ftype:
-            #     np_cost_dfval = self._ks_sum_function_diff(np_resi, np_resi_diff)
-            else:
-                np_cost_dfval = self._function_type_diff(np_resi, np_resi_diff)
-
-            # Add regularization gradient using the composite strategy
             np_reg_grad = self._regularization.gradient(xi, fdm=fdm, **kwargs)
 
-            np_reg_cost_dfval = np_cost_dfval + np_reg_grad
+            if fsum:
+                np_cost_dfval = self._sum_function_diff(np_resi, np_resi_diff)
+            else:
+                np_cost_dfval = self._function_type_diff(np_resi, np_resi_diff)
+                n_funcs = np_cost_dfval.shape[0]
+                np_reg_grad = np.asarray([np_reg_grad for _ in range(n_funcs)]) / n_funcs
+
+            if freg:
+                np_cost_dfval = np_cost_dfval + np_reg_grad
 
         else:
-            np_reg_cost_dfval = _fdm(self._cost_function, xi, xi_bounds=self.xi_bounds, **kwargs)
+            np_cost_dfval = _fdm(self._cost_function, xi, xi_bounds=self.xi_bounds, **kwargs)
 
-        if not is_finite(np_reg_cost_dfval):
-            nan_mask = ~np.isfinite(np_reg_cost_dfval)
+        if not is_finite(np_cost_dfval):
+            nan_mask = ~np.isfinite(np_cost_dfval)
             nan_indices = np.where(nan_mask)[0]
             raise ValueError(
                 f"Gradient contains NaN/Inf values at indices {nan_indices.tolist()}. "
-                f"xi = {xi}, gradient = {np_reg_cost_dfval}"
+                f"xi = {xi}, gradient = {np_cost_dfval}"
             )
 
-        return np_reg_cost_dfval
+        return np_cost_dfval
 
     def mse(self, xi: np.ndarray) -> float:
         """
@@ -948,7 +947,7 @@ class CostIntegrator:
         # We need to gather all residuals from each function
         if self._mobj:
             # FIXME: Remove _map_residuum_function, use a loop instead
-            list_args = [(i, self._fid, fun_i, xi, 0) for i, fun_i in enumerate(self.cost_function)]
+            list_args = [(i, self._fid, fun_i, xi, 0) for i, fun_i in enumerate(self.cost_functions)]
             results = map(self._map_residuum_function, list_args)
             list_residuum, _ = zip(*results)  # We don't need the derivative part
 
@@ -960,7 +959,7 @@ class CostIntegrator:
             all_resid_nw = self._residuum(xi)
         else:
             # Single cost function
-            all_resid = self.cost_function[-1].residuum(xi)
+            all_resid = self.cost_functions[-1].residuum(xi)
 
         # Compute MSE
         # 1) sum of squares
@@ -996,9 +995,9 @@ class CostIntegrator:
         if self._mobj:
             fval = self._cost_function(xi)
         else:
-            fval = self.cost_function[-1](xi)
+            fval = self.cost_functions[-1](xi)
 
-        return fval.item()
+        return float(fval)
 
     def derivative(self, xi: np.ndarray, df_xi: np.ndarray = None) -> np.ndarray:
         """
@@ -1028,7 +1027,7 @@ class CostIntegrator:
         if self._mobj:
             np_eqv_dfun = self._cost_function_diff(xi)
         else:
-            np_eqv_dfun = self.cost_function.derivative(xi)
+            np_eqv_dfun = self.cost_functions.derivative(xi)
 
         if df_xi is not None:
             df_xi[:] = np_eqv_dfun.astype(float)

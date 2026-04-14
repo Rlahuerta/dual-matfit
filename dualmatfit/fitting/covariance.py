@@ -8,27 +8,27 @@ Implements a full covariance pipeline for penalised M-estimators:
 2. **Eigenvalue polish** — recompute eigenvalues in eigenvector directions
    via Ridders' extrapolation to ensure positive-definiteness [Baker, 2021].
 3. **NPD calibration** — condition-number-aware eigenvalue thresholding
-   based on Huang et al. (2017) with a ``lambda_max / kappa_target`` floor.
-4. **Sandwich covariance** — ``V = H^{-1} B H^{-1}`` where ``B`` is the meat
+   based on Huang et al. (2017) with a ``λ_max / κ_target`` floor.
+4. **Sandwich covariance** — ``V = H⁻¹ B H⁻¹`` where ``B`` is the meat
    matrix assembled from per-section score vectors [White, 1980; Huber
-   and Ronchetti, 2009, Sec.7.6].
-5. **Confidence intervals** — Wald-type ``xi pm t_{alpha/2, dof} x SE`` with
+   and Ronchetti, 2009, §7.6].
+5. **Confidence intervals** — Wald-type ``xi ± t_{α/2, dof} × SE`` with
    optional clipping to design-variable box constraints [Seber and Wild,
-   2003, Sec.5.2].
+   2003, §5.2].
 
 References
 ----------
  - [1] Baker, R. (2021). Estimating accurate covariance matrices on
        fitted model parameters. *arXiv:2105.04829v1*.
  - [2] White, H. (1980). A heteroskedasticity-consistent covariance
-       matrix estimator. *Econometrica*, 48(4):817-838.
+       matrix estimator. *Econometrica*, 48(4):817–838.
  - [3] Huber, P. J. and Ronchetti, E. M. (2009). *Robust Statistics*,
-       2nd ed. Wiley. Sec.7.6 (sandwich formula for M-estimators).
+       2nd ed. Wiley. §7.6 (sandwich formula for M-estimators).
  - [4] Huang, C., Farewell, D. and Pan, J. (2017). A calibration method
        for non-positive definite covariance matrix. *J. Multivariate
-       Analysis*, 157:45-52.
+       Analysis*, 157:45–52.
  - [5] Seber, G. A. F. and Wild, C. J. (2003). *Nonlinear Regression*.
-       Wiley. Sec.5.2 (finite-sample t-based confidence intervals).
+       Wiley. §5.2 (finite-sample t-based confidence intervals).
  - [6] Press, W. H., et al. (2007). *Numerical Recipes*, 3rd ed.
 """
 from __future__ import annotations
@@ -90,9 +90,9 @@ def find_initial_step(
     """Find an initial step size suitable for curvature estimation along axis *i*.
 
     Starting from ``h = eps^{1/4}``, doubles *h* until the central-difference
-    curvature estimate ``(f(x0+h) - 2f(x0) + f(x0-h)) / h^2`` is finite and
+    curvature estimate ``(f(x0+h) − 2f(x0) + f(x0−h)) / h²`` is finite and
     positive. Falls back to the bracket condition
-    ``f(x0+h) > f(x0) and f(x0-h) > f(x0)`` when possible.
+    ``f(x0+h) > f(x0) and f(x0−h) > f(x0)`` when possible.
 
     Parameters
     ----------
@@ -144,13 +144,13 @@ def ridders_curvature(
     beta: float = 1.4,
     max_tableau: int = 10,
 ) -> Tuple[float, float]:
-    """Compute the diagonal curvature ``d^2f/dx_i^2`` using Ridders' method.
+    """Compute the diagonal curvature ``∂²f/∂x_i²`` using Ridders' method.
 
-    Implements Steps 1-3 of Baker (2021, Section 2):
+    Implements Steps 1–3 of Baker (2021, Section 2):
     1. Find initial step via :func:`find_initial_step`.
-    2. Estimate curvature scale ``sigma = h / sqrt(f(x0+h) - 2f(x0) + f(x0-h))``.
+    2. Estimate curvature scale ``σ = h / √(f(x0+h) − 2f(x0) + f(x0−h))``.
     3. Apply Neville-tableau Richardson extrapolation (Ridders' method)
-       starting at ``h = sigma / 2``, scaling down by *beta* each row.
+       starting at ``h = σ / 2``, scaling down by *beta* each row.
 
     Parameters
     ----------
@@ -161,14 +161,14 @@ def ridders_curvature(
     i : int
         Coordinate index for the curvature.
     beta : float
-        Step-size reduction factor per tableau row (paper recommends sqrt(2) ~ 1.4).
+        Step-size reduction factor per tableau row (paper recommends √2 ≈ 1.4).
     max_tableau : int
         Maximum number of Neville-tableau rows.
 
     Returns
     -------
     curvature : float
-        Estimated second derivative ``d^2f/dx_i^2``.
+        Estimated second derivative ``∂²f/∂x_i²``.
     h_opt : float
         Optimal step size at which the best estimate was obtained.
     """
@@ -241,7 +241,7 @@ def central_diff_cross(
     hi: float,
     hj: float,
 ) -> float:
-    """Central difference approximation to the cross-derivative d^2f/dx_i dx_j.
+    """Central difference approximation to the cross-derivative ∂²f/∂x_i∂x_j.
 
     .. math::
 
@@ -304,7 +304,7 @@ def richardson_off_diagonal(
 
         H_{ij} \\approx \\frac{4 D(h_i/2, h_j/2) - D(h_i, h_j)}{3}
 
-    This improves the error from ``O(h^2)`` to ``O(h^4)``.
+    This improves the error from ``O(h²)`` to ``O(h⁴)``.
     Uses 8 function evaluations total (4 per central difference call).
     """
     d_full = central_diff_cross(cost_fun, x0, i, j, hi, hj)
@@ -379,7 +379,7 @@ def eigenvalue_polish(
 ) -> np.ndarray:
     """Polish eigenvalues to ensure positive-definiteness.
 
-    Diagonalizes ``H = Q D Q^T`` (via ``eigh`` for symmetric matrices) and
+    Diagonalizes ``H = Q D Qᵀ`` (via ``eigh`` for symmetric matrices) and
     optionally recomputes each eigenvalue by applying Ridders' method along
     the corresponding eigenvector direction.  Negative or tiny eigenvalues
     are clamped to *min_eigenvalue*.
@@ -387,7 +387,7 @@ def eigenvalue_polish(
     References
     ----------
     Baker, R. (2021). Estimating accurate covariance matrices on fitted
-    model parameters. *arXiv:2105.04829v1*, Section 3.
+    model parameters. *arXiv:2105.04829v1*, §3.
 
     Parameters
     ----------
@@ -438,46 +438,46 @@ def huang_calibration(
     """Calibrate a matrix to a well-conditioned positive-definite surrogate.
 
     Uses direct eigenvalue thresholding via a condition-number target.
-    Every eigenvalue below ``c* = lambda_max / kappa_target`` is lifted to ``c*``,
-    guaranteeing ``kappa(H_PD) <= kappa_target`` with minimal Frobenius distortion.
+    Every eigenvalue below ``c* = λ_max / κ_target`` is lifted to ``c*``,
+    guaranteeing ``κ(H_PD) ≤ κ_target`` with minimal Frobenius distortion.
 
     Parameters
     ----------
     matrix : ndarray, shape (n, n)
         Symmetric matrix (possibly NPD or ill-conditioned) to calibrate.
     atol : float
-        Eigenvalues <= *atol* are treated as non-positive.
+        Eigenvalues ≤ *atol* are treated as non-positive.
     kappa_target : float
         Maximum acceptable condition number for the calibrated matrix.
-        The eigenvalue floor is ``lambda_max / kappa_target``.
+        The eigenvalue floor is ``λ_max / kappa_target``.
         Set to ``np.inf`` to disable the floor (eigenvalues are still
         lifted to *atol* to ensure positivity).
 
     Returns
     -------
     H_pd : ndarray, shape (n, n)
-        Calibrated positive-definite matrix with ``kappa <= kappa_target``.
+        Calibrated positive-definite matrix with ``κ ≤ kappa_target``.
 
     References
     ----------
     Lopez C., D. C. et al. (2015). A computational framework for
     identifiability and ill-conditioning analysis of lithium-ion battery
-    models. *SIAM/ASA J. Uncertainty Quantification*, 3(1):464-504.
+    models. *SIAM/ASA J. Uncertainty Quantification*, 3(1):464–504.
 
     Seber, G. A. F. and Wild, C. J. (2003). *Nonlinear Regression*.
-    Wiley. Section 5.1 — uses ``tol x lambda_max`` as eigenvalue floor.
+    Wiley. §5.1 — uses ``tol × λ_max`` as eigenvalue floor.
     """
     eigen_values, eigen_vectors = np.linalg.eigh(matrix)
     lambda_max = eigen_values.max()
 
-    # Direct threshold: c* = lambda_max / kappa_target
+    # Direct threshold: c* = λ_max / κ_target
     if np.isfinite(kappa_target) and lambda_max > 0:
         c_star = lambda_max / kappa_target
     elif lambda_max > 0:
         # kappa_target=inf: no conditioning control, but ensure positivity
         c_star = lambda_max * 1e-12
     else:
-        # All-negative: anchor to |lambda_max|
+        # All-negative: anchor to |λ_max|
         c_star = np.abs(eigen_values).max() * 1e-6
 
     # Ensure at least atol for positivity
@@ -487,14 +487,14 @@ def huang_calibration(
     if eigen_values.min() >= c_star:
         kappa_actual = lambda_max / eigen_values.min() if eigen_values.min() > 0 else np.inf
         logger.debug(
-            "huang_calibration: matrix already PD with kappa=%.2e <= kappa_target=%.2e",
+            "huang_calibration: matrix already PD with κ=%.2e ≤ κ_target=%.2e",
             kappa_actual, kappa_target,
         )
         return matrix
 
     n_flipped = int(np.sum(eigen_values < c_star))
 
-    # Iterative calibration: progressively tighten kappa_target if needed
+    # Iterative calibration: progressively tighten κ_target if needed
     c_star_i = c_star
     kappa_target_i = kappa_target
     eigen_vectors_i = eigen_vectors
@@ -509,7 +509,7 @@ def huang_calibration(
         if eigen_values_check.min() >= atol:
             break
 
-        # Tighten: halve kappa_target (handles finite targets only)
+        # Tighten: halve κ_target (handles finite targets only)
         if np.isfinite(kappa_target_i):
             kappa_target_i /= 2.0
             c_star_i = lambda_max / kappa_target_i
@@ -523,7 +523,7 @@ def huang_calibration(
 
     kappa_result = calibrated_eigs.max() / calibrated_eigs.min()
     logger.info(
-        "huang_calibration: c*=%.3e  flipped %d/%d eigenvalues  kappa_result=%.2e",
+        "huang_calibration: c*=%.3e  flipped %d/%d eigenvalues  κ_result=%.2e",
         c_star_i, n_flipped, len(eigen_values), kappa_result,
     )
 
@@ -543,11 +543,11 @@ class CovarianceReport:
     param_names : tuple of str
         Names of the fitted parameters.
     covariance_matrix : ndarray, shape (n, n)
-        Estimated covariance matrix ``V = H^{-1}``.
+        Estimated covariance matrix ``V = H⁻¹``.
     standard_errors : ndarray, shape (n,)
-        Standard errors ``sigma_i = sqrt(V_{ii})``.
+        Standard errors ``σ_i = √V_{ii}``.
     correlation_matrix : ndarray, shape (n, n)
-        Correlation matrix ``R_{ij} = V_{ij} / (sigma_i sigma_j)``.
+        Correlation matrix ``R_{ij} = V_{ij} / (σ_i σ_j)``.
     hessian_matrix : ndarray, shape (n, n)
         The computed (and optionally polished) Hessian.
     eigenvalues : ndarray, shape (n,)
@@ -561,11 +561,11 @@ class CovarianceReport:
         Per-parameter confidence interval (``lower``, ``value``,
         ``upper``) at the ``confidence_level`` significance level,
         indexed by parameter name.  Computed as
-        ``xi pm t_{alpha/2, dof} x SE`` where *n_params* is the **total**
+        ``xi ± t_{α/2, dof} × SE`` where *n_params* is the **total**
         number of fitted parameters (not just those in *param_names*)
-        and *dof = n_obs - n_params*.  The raw interval is clipped to
+        and *dof = n_obs − n_params*.  The raw interval is clipped to
         the design-variable box constraints when available, so
-        ``lower >= lb`` and ``upper <= ub`` for every parameter.
+        ``lower ≥ lb`` and ``upper ≤ ub`` for every parameter.
     confidence_level : float
         Confidence level used for ``confidence_interval`` (e.g. 0.95).
     n_function_evals : int
@@ -613,7 +613,7 @@ class _EvalCounter:
 def frobenius_distance(vec_a: np.ndarray, vec_b: np.ndarray) -> float:
     """Mean absolute element-wise distance (Paper Eq. for F).
 
-    ``F = Sigma|A_ij - B_ij| / n^2``
+    ``F = Σ|A_ij − B_ij| / n²``
     """
     n = vec_a.shape[0]
     return float(np.sum(np.abs(vec_a - vec_b)) / (n * n))
@@ -627,7 +627,7 @@ def correlation_distance(vec_a: np.ndarray, vec_b: np.ndarray) -> float:
 def g_metric(vec_comp: np.ndarray, vec_ref: np.ndarray) -> float:
     """Average percentage error on standard errors (Paper metric G).
 
-    ``G = 100 Sigma|sqrt(V_ii) - sqrt(C_ii)| / (n sqrt(C_ii))``
+    ``G = 100 Σ|√V_ii − √C_ii| / (n √C_ii)``
     """
     se_comp = np.sqrt(np.diag(vec_comp))
     se_ref = np.sqrt(np.diag(vec_ref))
@@ -658,23 +658,23 @@ def _compute_confidence_interval(
 ) -> pd.DataFrame:
     """Compute per-parameter confidence intervals.
 
-    CI = xi pm t_{alpha/2, dof} x SE  where dof = n_obs - n_params.
+    CI = xi ± t_{α/2, dof} × SE  where dof = n_obs − n_params.
 
     When *bounds* are supplied the raw interval is clipped so that
-    ``lower >= lb`` and ``upper <= ub`` for each parameter, ensuring the
+    ``lower ≥ lb`` and ``upper ≤ ub`` for each parameter, ensuring the
     CI stays inside the physically admissible domain.
 
     References
     ----------
     Seber, G. A. F. and Wild, C. J. (2003). *Nonlinear Regression*.
-    Wiley. Section 5.2 — finite-sample t-based confidence intervals.
+    Wiley. §5.2 — finite-sample t-based confidence intervals.
 
     Parameters
     ----------
     xi : ndarray, shape (n,)
         Fitted parameter vector.
     se : ndarray, shape (n,)
-        Standard errors (sqrt(diag(V))).
+        Standard errors (√diag(V)).
     n_obs : int
         Total number of observations across all sections.
     n_params : int
@@ -724,17 +724,17 @@ def robust_covariance_from_cost(
 ) -> CovarianceReport:
     """Compute covariance from a cost integrator using the accurate Hessian.
 
-    The resulting sandwich covariance is ``V = H^{-1} B H^{-1}`` where ``H``
+    The resulting sandwich covariance is ``V = H⁻¹ B H⁻¹`` where ``H``
     is the Hessian of *integrator._cost_function* at *xi* and ``B`` is
     the meat matrix built from per-section score vectors.
 
     References
     ----------
     White, H. (1980). A heteroskedasticity-consistent covariance matrix
-    estimator. *Econometrica*, 48(4):817-838.
+    estimator. *Econometrica*, 48(4):817–838.
 
     Huber, P. J. and Ronchetti, E. M. (2009). *Robust Statistics*, 2nd ed.
-    Wiley. Section 7.6 (sandwich formula for M-estimators).
+    Wiley. §7.6 (sandwich formula for M-estimators).
 
     Parameters
     ----------
@@ -806,10 +806,10 @@ def robust_covariance_from_cost(
     if np_scores.ndim == 1:
         np_scores = np_scores[np.newaxis, :]
 
-    # Meat matrix: B = Sigma_i s_i s_i^T = S.T @ S  (rank <= n_functions)
+    # Meat matrix: B = Σᵢ sᵢ sᵢᵀ = S.T @ S  (rank ≤ n_functions)
     np_meat = np_scores.T @ np_scores
 
-    # Sandwich: V = H^{-1} B H^{-1}  (solve twice, transposing between)
+    # Sandwich: V = H⁻¹ B H⁻¹  (solve twice, transposing between)
     H_inv_B = np.linalg.solve(np_hessian, np_meat)
     np_covariance = np.linalg.solve(np_hessian, H_inv_B.T).T
 
@@ -843,10 +843,10 @@ def robust_covariance_from_cost(
         name='Hessian Diagonal',
     )
 
-    # Confidence intervals: xi pm t_{alpha/2, dof} x SE, clipped to design bounds
+    # Confidence intervals: xi ± t_{α/2, dof} × SE, clipped to design bounds
     n_params = len(integrator.inp_mat_keys)
     try:
-        n_obs = sum(cf.ncontrol for cf in integrator.cost_function)
+        n_obs = sum(cf.ncontrol for cf in integrator.cost_functions)
     except (AttributeError, TypeError):
         n_obs = n_params + 1  # minimal fallback
 
@@ -886,11 +886,11 @@ def covariance_from_gauss_newton(
     """Compute covariance using the Gauss-Newton approximation.
 
     Uses the Jacobian of the residuals to form the normal matrix
-    ``J^T J`` and estimates the residual variance as ``s^2 = RSS / (m - n)``
-    where ``RSS = Sigma r_i^2`` and ``m``, ``n`` are the number of residuals and
+    ``JᵀJ`` and estimates the residual variance as ``s² = RSS / (m − n)``
+    where ``RSS = Σ rᵢ²`` and ``m``, ``n`` are the number of residuals and
     parameters, respectively.
 
-    ``V = s^2 (J^T J)^{-1}``
+    ``V = s² (JᵀJ)⁻¹``
 
     Parameters
     ----------
@@ -1010,7 +1010,7 @@ def load_covariance_report(path: Union[str, Path]) -> CovarianceReport:
     data = np.load(str(path), allow_pickle=False)
     param_names = tuple(data['param_names'].tolist())
 
-    # Confidence interval (backward-compatible: missing -> zeros)
+    # Confidence interval (backward-compatible: missing → zeros)
     if 'confidence_interval_lower' in data:
         ci_index = list(data['confidence_interval_index'])
         ci_value = data['confidence_interval_value'] if 'confidence_interval_value' in data else np.zeros(len(ci_index))
@@ -1065,7 +1065,7 @@ def format_params_with_uncertainty(
     params: pd.Series,
     report: CovarianceReport,
 ) -> pd.DataFrame:
-    """Create a single-row DataFrame with parameter values and +/- sigma columns.
+    """Create a single-row DataFrame with parameter values and ± σ columns.
 
     Parameters
     ----------
@@ -1078,7 +1078,7 @@ def format_params_with_uncertainty(
     Returns
     -------
     pd.DataFrame
-        Single-row DataFrame with columns ``[p1, p1 +/- sigma, p2, p2 +/- sigma, ...]``.
+        Single-row DataFrame with columns ``[p₁, p₁ ± σ, p₂, p₂ ± σ, …]``.
 
     Raises
     ------
@@ -1094,7 +1094,7 @@ def format_params_with_uncertainty(
     row: dict = {}
     for name, se in zip(report.param_names, report.standard_errors):
         row[name] = params[name]
-        row[f'{name} +/- sigma'] = float(se)
+        row[f'{name} ± σ'] = float(se)
 
     return pd.DataFrame([row])
 

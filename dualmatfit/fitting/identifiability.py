@@ -37,7 +37,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 # from typing import Sequence
 # from dualmatfit.optimization.cost import CostIntegrator
-# Deferred import to avoid circular dependency (covariance <-> identifiability)
+# Deferred import to avoid circular dependency (covariance ↔ identifiability)
 # build_gauss_newton_hessian is imported lazily inside functions that need it.
 
 import numpy as np
@@ -256,7 +256,7 @@ def analyze_cost_integrator(
 
     singular_values = np.asarray(np.linalg.svd(gauss_newton_hessian_bk1, compute_uv=False), dtype=float)
     smallest_singular_value = float(singular_values[-1]) if singular_values.size else 0.0
-    est_res_variance = 2 * np.sum(np_fval) / (integrator.cost_function[0].ncontrol - param_idx.shape[0])
+    est_res_variance = 2 * np.sum(np_fval) / (integrator.cost_functions[0].ncontrol - param_idx.shape[0])
 
     covar_matrix = np.sqrt(est_res_variance) * np.linalg.pinv(gauss_newton_hessian_bk1)
     std_error = np.sqrt(np.linalg.diagonal(covar_matrix))

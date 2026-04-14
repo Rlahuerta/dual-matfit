@@ -14,9 +14,8 @@ from collections import OrderedDict
 from typing import Tuple, List, Dict, Union, Optional
 
 from dualmatfit.formulation.variational import VariationalFormulation
-from dualmatfit.solvers.extension import ExtensionSolution, DesignVariablesMixin
+from dualmatfit.solvers.extension import ExtensionSolution
 from dualmatfit.solvers.derivative import _fdm, adjoint_derivative
-from dualmatfit.utils.ks import min_ks, max_ks
 from dualmatfit.utils.numeric import safe_divide
 
 __all__ = [

@@ -64,7 +64,7 @@ class TestCostFunctions(unittest.TestCase):
         result = self.lsq_loss_lbd(*self.np_xi)
         expected = lsq_fval(self.np_residuum)
 
-        self.assertAlmostEqual(result, expected)
+        self.assertAlmostEqual(result, expected.sum())
 
         lsq_loss_diff_sym = sy.derive_by_array(self.lsq_loss_sym, self.xi)
         lsq_loss_diff_lbd = _lambdify(self.xi, lsq_loss_diff_sym, module=module)
@@ -72,7 +72,7 @@ class TestCostFunctions(unittest.TestCase):
         np_diff_sym = lsq_loss_diff_lbd(*self.np_xi)
         np_diff_ref = lsq_dfval(self.np_residuum, self.np_residuum_diff.T)
 
-        np.testing.assert_array_almost_equal(np_diff_sym, np_diff_ref)
+        np.testing.assert_array_almost_equal(np_diff_sym, np_diff_ref.sum(axis=0))
 
     def test_cauchy_loss(self):
         cval = 20.
@@ -80,7 +80,7 @@ class TestCostFunctions(unittest.TestCase):
         result = self.cauchy_loss_lbd(*self.np_xi, cval)
         expected = cauchy_fval(self.np_residuum, cval)
 
-        np.testing.assert_approx_equal(result, expected, significant=3)
+        np.testing.assert_approx_equal(result, expected.sum(), significant=3)
 
         cauchy_loss_diff_sym = sy.derive_by_array(self.cauchy_loss_sym, self.xi)
         cauchy_loss_diff_lbd = _lambdify((*self.xi, self.c), cauchy_loss_diff_sym, module=module)
@@ -88,7 +88,7 @@ class TestCostFunctions(unittest.TestCase):
         np_diff_sym = cauchy_loss_diff_lbd(*self.np_xi, cval)
         np_diff_ref = cauchy_dfval(self.np_residuum, self.np_residuum_diff.T, c=cval)
 
-        np.testing.assert_array_almost_equal(np_diff_sym, np_diff_ref, decimal=1)
+        np.testing.assert_array_almost_equal(np_diff_sym, np_diff_ref.sum(axis=0), decimal=1)
 
     # FIXME
     @pytest.mark.skip(reason="This test is not ready yet")
@@ -110,7 +110,7 @@ class TestCostFunctions(unittest.TestCase):
         result = ln_fval(self.np_residuum)
         expected = self.ln_loss_lbd(*self.np_xi)
 
-        np.testing.assert_approx_equal(result, expected, significant=3)
+        np.testing.assert_approx_equal(result.sum(), expected, significant=3)
 
         ln_loss_diff_sym = sy.derive_by_array(self.ln_loss_sym, self.xi)
         ln_loss_diff_lbd = _lambdify(self.xi, ln_loss_diff_sym, module=module)
@@ -118,10 +118,10 @@ class TestCostFunctions(unittest.TestCase):
         np_diff_sym = ln_loss_diff_lbd(*self.np_xi)
         np_diff_ref = ln_dfval(self.np_residuum, self.np_residuum_diff.T)
 
-        np.testing.assert_array_almost_equal(np_diff_sym, np_diff_ref, decimal=1)
+        np.testing.assert_array_almost_equal(np_diff_sym, np_diff_ref.sum(axis=0), decimal=1)
 
-        self.assertAlmostEqual(result, expected)
-        np.testing.assert_array_almost_equal(np_diff_sym, np_diff_ref)
+        self.assertAlmostEqual(result.sum(), expected)
+        np.testing.assert_array_almost_equal(np_diff_sym, np_diff_ref.sum(axis=0))
 
 
 class TestCostFunctionCache:

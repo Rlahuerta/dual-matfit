@@ -342,6 +342,8 @@ class CompositeRegularization(RegularizationStrategy):
     
     def __init__(self, strategies: Optional[List[RegularizationStrategy]] = None):
         self._strategies = strategies if strategies is not None else []
+        self._cached_values: list = []
+        self._cached_gradients: np.ndarray = np.array([])
     
     def add_strategy(self, strategy: RegularizationStrategy) -> None:
         """Add a regularization strategy to the composite."""
@@ -361,7 +363,8 @@ class CompositeRegularization(RegularizationStrategy):
         float
             Sum of all regularization term values.
         """
-        return sum(s.value(xi) for s in self._strategies)
+        self._cached_values = [s.value(xi) for s in self._strategies]
+        return sum(self._cached_values)
     
     def gradient(self, xi: np.ndarray, fdm: bool = False, **kwargs) -> np.ndarray:
         """
@@ -384,4 +387,5 @@ class CompositeRegularization(RegularizationStrategy):
         if not self._strategies:
             return np.zeros_like(xi)
         
-        return sum(s.gradient(xi, fdm=fdm, **kwargs) for s in self._strategies)
+        self._cached_gradients = np.array([s.gradient(xi, fdm=fdm, **kwargs) for s in self._strategies])
+        return self._cached_gradients.sum(axis=0)

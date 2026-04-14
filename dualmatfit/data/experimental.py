@@ -145,20 +145,7 @@ class InstronData:
                 f"ncontrol ({self.ncontrol}) <= 0, or interpolators not created. Using raw data.",
                 UserWarning
             )
-            # Fallback: Use raw data points as 'control' points
-            self.np_tinc = self.np_time
-            self.np_textn = self.np_extn
-            self.np_tload = self.np_load
-            self.ref_extn = self.np_extn[0] if self.np_extn.size > 0 else 0.0
-            self.ref_load = self.np_load[0] if self.np_load.size > 0 else 0.0
-
-            if self.np_time.size > 1:
-                 self.np_tinc_rs = self.scaler.fit_transform(self.np_tinc.reshape(-1, 1)).flatten()
-
-            # Set high-res data to raw data in fallback case
-            self.high_res_tinc = self.np_time
-            self.high_res_extn = self.np_extn
-            self.high_res_load = self.np_load
+            self._use_raw_data_as_control_points()
 
         else:
             # Proceed with interpolation
@@ -184,22 +171,26 @@ class InstronData:
                 # IndexError: Empty arrays when accessing [0]
                 # LinAlgError: Singular matrix during interpolation
                 logger.info(f"Error during interpolation for control/high-res points: {e}. Falling back to raw data.")
-                # Fallback logic copied from above
-                self.np_tinc = self.np_time
-                self.np_textn = self.np_extn
-                self.np_tload = self.np_load
-                self.ref_extn = self.np_extn[0] if self.np_extn.size > 0 else 0.0
-                self.ref_load = self.np_load[0] if self.np_load.size > 0 else 0.0
+                self._use_raw_data_as_control_points()
 
-                if self.np_time.size > 1:
-                    self.np_tinc_rs = self.scaler.fit_transform(self.np_tinc.reshape(-1, 1)).flatten()
-
-                self.high_res_tinc = self.np_time
-                self.high_res_extn = self.np_extn
-                self.high_res_load = self.np_load
 
         # Compute derived properties based on available data (raw or interpolated)
         self._compute_derived_properties()
+
+    def _use_raw_data_as_control_points(self) -> None:
+        """Populate control-point arrays directly from the raw experimental series."""
+        self.np_tinc = self.np_time
+        self.np_textn = self.np_extn
+        self.np_tload = self.np_load
+        self.ref_extn = self.np_extn[0] if self.np_extn.size > 0 else 0.0
+        self.ref_load = self.np_load[0] if self.np_load.size > 0 else 0.0
+
+        if self.np_time.size > 1:
+            self.np_tinc_rs = self.scaler.fit_transform(self.np_tinc.reshape(-1, 1)).flatten()
+
+        self.high_res_tinc = self.np_time
+        self.high_res_extn = self.np_extn
+        self.high_res_load = self.np_load
 
     def _compute_derived_properties(self):
         """Computes stretch, force, PK1 etc. based on available raw and control point data."""

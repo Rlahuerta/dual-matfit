@@ -44,7 +44,7 @@ def test_analyze_cost_integrator_detects_beta_k1_near_collinearity():
     integrator._cost_function = MagicMock(return_value=float(fval.sum()))
     integrator._residuum_diff = MagicMock(return_value=jacobian[np.newaxis, :, :])
     integrator.inp_mat_keys = ["alpha", "k_1", "mu"]
-    integrator.lsq_mat_fun = [cost_fun]
+    integrator.cost_functions = [cost_fun]
     integrator._alpha = 0.001
 
     report = analyze_cost_integrator(

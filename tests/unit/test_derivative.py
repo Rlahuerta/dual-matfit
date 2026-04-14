@@ -180,7 +180,7 @@ class TestVariationalFormulation(unittest.TestCase):
                                          f"{work_path}/force_nh_{str_opts_i}_{self.vol_type}_ini_ps.png",
                                          )
 
-            lsq_int_fun_i = CostIntegrator(lsq_mat_fun=[lsq_fun_i],
+            lsq_int_fun_i = CostIntegrator(mat_cost_fun=[lsq_fun_i],
                                            ftype='cauchy_robust',
                                            fid=None,
                                            c=20,

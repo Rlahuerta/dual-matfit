@@ -83,10 +83,10 @@ def lsq_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
         residuum (np.ndarray): Residual vector.
 
     Returns:
-        float: Function value.
+        np.ndarray: Per-row function values, shape (n_rows,).
     """
     residuum_in = _ensure_2d_residuum(residuum)
-    return np.sum(np.linalg.norm(residuum_in, axis=1))
+    return np.linalg.norm(residuum_in, axis=1)
 
 
 def lsq_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> np.ndarray:
@@ -98,7 +98,7 @@ def lsq_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> np.n
         residuum_diff (np.ndarray): Derivative of residuals.
 
     Returns:
-        np.ndarray: Gradient vector.
+        np.ndarray: Per-row gradient array, shape (n_rows, n_vars).
     """
     residuum_in = _ensure_2d_residuum(residuum)
     residuum_diff_in = _ensure_3d_jacobian(residuum_diff)
@@ -109,9 +109,7 @@ def lsq_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> np.n
     dfvals = np.einsum('ij,ijk->ik', residuum_in, residuum_diff_in)
 
     # Normalize by the norm of each residual vector (guard against zero norms)
-    dfvals_normalized = safe_divide(dfvals, norms[:, np.newaxis], default=0.0)
-
-    return np.sum(dfvals_normalized, axis=0)
+    return safe_divide(dfvals, norms[:, np.newaxis], default=0.0)
 
 
 def lsq_wise_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
@@ -167,17 +165,13 @@ def cauchy_fval(residuum: np.ndarray, c: float, **kwargs) -> np.ndarray:
         c (float): Scaling parameter.
 
     Returns:
-        float: Function value.
+        np.ndarray: Sum over rows, shape (n_residuals,).
     """
     residuum_in = _ensure_2d_residuum(residuum)
 
-    list_fvals = []
-    for i in range(residuum_in.shape[0]):
-        residuum2_i = (residuum_in[i, :] / c) ** 2
-        fval_i = 0.5 * c ** 2 * np.sum(np.log1p(residuum2_i))
-        list_fvals.append(fval_i)
-
-    return sum(list_fvals)
+    np_residuum2 = (residuum_in / c) ** 2
+    np_fval = 0.5 * c ** 2 * np.log1p(np_residuum2)
+    return np_fval.sum(axis=0)
 
 
 def cauchy_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, c: float, **kwargs) -> np.ndarray:
@@ -190,21 +184,14 @@ def cauchy_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, c: float, **kw
         c (float): Scaling parameter.
 
     Returns:
-        np.ndarray: Gradient vector.
+        np.ndarray: Sum over rows, shape (n_residuals, n_vars).
     """
     residuum_in = _ensure_2d_residuum(residuum)
     residuum_diff_in = _ensure_3d_jacobian(residuum_diff)
 
-    list_dfvals = []
-    for i in range(residuum_in.shape[0]):
-        residuum2_i = (residuum_in[i, :] / c) ** 2
-        denom_i = 1. + residuum2_i
-
-        weights_i = residuum_in[i, :] / denom_i                     # Shape: (n_residuals,)
-        np_dfval_i = weights_i @ residuum_diff_in[i, :, :]          # Shape: (n_vars,)
-        list_dfvals.append(np_dfval_i)
-
-    return np.sum(list_dfvals, axis=0)
+    weights = residuum_in / (1. + (residuum_in / c) ** 2)          # (n_rows, n_residuals)
+    cauchy_diff = weights[:, :, np.newaxis] * residuum_diff_in      # (n_rows, n_residuals, n_vars)
+    return cauchy_diff.sum(axis=0)                                   # (n_residuals, n_vars)
 
 
 def huber_fval(residuum: np.ndarray, delta: float = 1., **kwargs) -> np.ndarray:
@@ -216,7 +203,7 @@ def huber_fval(residuum: np.ndarray, delta: float = 1., **kwargs) -> np.ndarray:
         delta (float): Threshold parameter.
 
     Returns:
-        float: Function value.
+        np.ndarray: Per-row function values, shape (n_rows,).
     """
     residuum_in = _ensure_2d_residuum(residuum)
 
@@ -228,7 +215,7 @@ def huber_fval(residuum: np.ndarray, delta: float = 1., **kwargs) -> np.ndarray:
         fval_i = np.where(abs_res_i <= delta, resid2_i, linear_i)
         list_fvals.append(np.sum(fval_i))
 
-    return sum(list_fvals)
+    return np.array(list_fvals, dtype=float)
 
 
 def huber_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, delta: float = 1., **kwargs) -> np.ndarray:
@@ -241,7 +228,7 @@ def huber_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, delta: float = 
         delta (float): Threshold parameter.
 
     Returns:
-        np.ndarray: Gradient vector.
+        np.ndarray: Per-row gradient array, shape (n_rows, n_vars).
     """
     residuum_in = _ensure_2d_residuum(residuum)
     residuum_diff_in = _ensure_3d_jacobian(residuum_diff)
@@ -253,7 +240,7 @@ def huber_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, delta: float = 
         np_dfval_i = np_grad_i @ residuum_diff_in[i, :, :]
         list_dfvals.append(np_dfval_i)
 
-    return np.sum(list_dfvals, axis=0)
+    return np.array(list_dfvals)
 
 
 def logcosh_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
@@ -264,15 +251,13 @@ def logcosh_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
         residuum (np.ndarray): Residual vector.
 
     Returns:
-        float: Function value.
+        np.ndarray: Per-row function values, shape (n_rows,).
     """
     residuum_in = _ensure_2d_residuum(residuum)
 
-    list_fvals = []
-    for i in range(residuum_in.shape[0]):
-        list_fvals.append(np.log(np.cosh(residuum_in[i, :])))
-
-    return sum(list_fvals)
+    return np.array(
+        [np.sum(np.log(np.cosh(residuum_in[i, :]))) for i in range(residuum_in.shape[0])]
+    )
 
 
 def logcosh_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> np.ndarray:
@@ -284,7 +269,7 @@ def logcosh_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> 
         residuum_diff (np.ndarray): Derivative of residuals.
 
     Returns:
-        np.ndarray: Gradient vector.
+        np.ndarray: Per-row gradient array, shape (n_rows, n_vars).
     """
     residuum_in = _ensure_2d_residuum(residuum)
     residuum_diff_in = _ensure_3d_jacobian(residuum_diff)
@@ -294,7 +279,7 @@ def logcosh_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> 
         tanh_residuum_i = np.tanh(residuum_in[i, :])
         list_dfvals.append(tanh_residuum_i @ residuum_diff_in[i, :, :])
 
-    return np.sum(list_dfvals, axis=0)
+    return np.array(list_dfvals)
 
 
 def ln_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
@@ -305,7 +290,7 @@ def ln_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
         residuum (np.ndarray): Residual vector.
 
     Returns:
-        float: Function value.
+        np.ndarray: Per-row function values, shape (n_rows,).
     """
     residuum_in = _ensure_2d_residuum(residuum)
 
@@ -315,7 +300,7 @@ def ln_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
         fval_i = np.log1p(residuum2_i)
         list_fvals.append(fval_i)
 
-    return sum(list_fvals)
+    return np.array(list_fvals)
 
 
 def ln_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> np.ndarray:
@@ -327,7 +312,7 @@ def ln_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> np.nd
         residuum_diff (np.ndarray): Derivative of residuals.
 
     Returns:
-        np.ndarray: Gradient vector.
+        np.ndarray: Per-row gradient array, shape (n_rows, n_vars).
     """
     residuum_in = _ensure_2d_residuum(residuum)
     residuum_diff_in = _ensure_3d_jacobian(residuum_diff)
@@ -338,7 +323,7 @@ def ln_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) -> np.nd
         np_dfval_i = (2. / (residuum2_i + 1.)) * np.dot(residuum_in[i, :], residuum_diff_in[i, :, :])
         list_dfvals.append(np_dfval_i)
 
-    return np.sum(list_dfvals, axis=0)
+    return np.array(list_dfvals)
 
 
 def sum_lsq_fun(y: np.ndarray) -> float:
