@@ -17,26 +17,6 @@ lbdf_mod = "jax"
 # lbdf_mod = 'numpy'
 # lbdf_mod = 'scipy'
 
-# Volume Strain Energy regularization scaling parameter
-# epsilon = None
-# epsilon = 1.e-5
-# epsilon = 1.e-4
-# epsilon = 1.e-3
-# epsilon = 1.e-2
-# epsilon = 5.e-2
-# epsilon = 0.1       # *
-
-
-########################################################################
-# Ratos Selection
-list_ratos_ko = ['rato_1', 'rato_3', 'rato_6', 'rato_8', 'rato_9', 'rato_11']
-list_ratos_wt = ['rato_2', 'rato_4', 'rato_5', 'rato_7', 'rato_10', 'rato_17',
-                 'rato_18', 'rato_20', 'rato_21', 'rato_22', 'rato_23', 'rato_24']
-
-list_ratos_id = ['rato_idoso_3', 'rato_idoso_4']
-
-list_ratos = list_ratos_ko + list_ratos_wt + list_ratos_id
-
 list_slc_colors = ['red', 'blue', 'chocolate', 'tan', 'gray', 'olive', 'lime', 'darkorange', 'teal', 'purple',
                    'salmon', 'teal', 'black', 'deeppink', 'darkviolet', 'royalblue']
 

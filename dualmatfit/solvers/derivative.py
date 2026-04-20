@@ -25,6 +25,7 @@ logger = get_logger('derivative')
 
 __all__ = [
     '_fdm',
+    '_hessian_fd',
     'adjoint_derivative',
 ]
 
@@ -285,3 +286,248 @@ def adjoint_derivative(dJ_du: np.ndarray,
     # DJ/Dm = ∂J/∂m - λ^T (∂R/∂m)
     np_DJ_Dm = dJ_dm + np_lbd @ dR_dm[1:, :]
     return np_DJ_Dm.flatten()
+
+
+def _hessian_fd(
+    j_fun: Callable[[np.ndarray], Union[float, np.ndarray]],
+    xi: np.ndarray,
+    xi_bounds: Optional[List[List[float]]] = None,
+    h: float = 1.e-4,
+    rel_step: float = 1e-5,
+) -> np.ndarray:
+    """
+    Compute the Hessian matrix using finite difference method with bounds handling.
+
+    Parameters
+    ----------
+    j_fun : Callable[[np.ndarray], Union[float, np.ndarray]]
+        The objective function to differentiate. Takes parameter array and returns
+        scalar or array value.
+    xi : np.ndarray
+        Design parameter values at which to compute the Hessian.
+    xi_bounds : List[List[float]], optional
+        List of [lower, upper] bound pairs for each parameter. If None,
+        bounds are auto-generated based on parameter values.
+    h : float, default=1e-4
+        Absolute step size for finite differences.
+    rel_step : float, default=1e-5
+        Relative step size (used when |xi| > 1e-8).
+
+    Returns
+    -------
+    np.ndarray
+        Hessian matrix (n_params, n_params) for scalar-valued functions.
+        For vector-valued functions, returns array of shape (n_outputs, n_params, n_params)
+        containing Hessian for each component.
+    """
+    # Ensure it's an array
+    xi = np.asarray(xi, dtype=float)
+    n_params = len(xi)
+
+    # Calculate step sizes with minimum to ensure numerical stability.
+    h_vec = np.maximum(np.where(np.abs(xi) > 1e-8, rel_step * np.abs(xi), h), h)
+
+    if xi_bounds is None:
+        xi_bounds = _auto_generate_bounds(xi, param_names=None)
+
+    # Evaluate function at center point
+    j0 = j_fun(xi)
+
+    # Check if function returns scalar or array
+    if np.isscalar(j0) or (isinstance(j0, np.ndarray) and j0.ndim == 0):
+        # Scalar-valued function
+        j0 = np.asarray(j0)
+        hessian = np.zeros((n_params, n_params), dtype=float)
+
+        # Compute Hessian using finite differences
+        for i in range(n_params):
+            for j in range(i, n_params):  # Exploit symmetry
+                if i == j:
+                    # Diagonal element: second derivative w.r.t. xi[i]
+                    # Forward step
+                    xi_fwd_i = xi.copy()
+                    xi_fwd_i[i] += h_vec[i]
+                    if xi_bounds is not None:
+                        xi_fwd_i[i] = np.clip(xi_fwd_i[i], xi_bounds[i][0], xi_bounds[i][1])
+
+                    # Backward step
+                    xi_bwd_i = xi.copy()
+                    xi_bwd_i[i] -= h_vec[i]
+                    if xi_bounds is not None:
+                        xi_bwd_i[i] = np.clip(xi_bwd_i[i], xi_bounds[i][0], xi_bounds[i][1])
+
+                    # Check if we can use central difference
+                    fwd_step_valid = xi_fwd_i[i] > xi[i] and xi_fwd_i[i] <= xi_bounds[i][1]
+                    bwd_step_valid = xi_bwd_i[i] < xi[i] and xi_bwd_i[i] >= xi_bounds[i][0]
+
+                    if fwd_step_valid and bwd_step_valid:
+                        j_fwd_i = j_fun(xi_fwd_i)
+                        j_bwd_i = j_fun(xi_bwd_i)
+                        hessian_ij = (j_fwd_i - 2.0 * j0 + j_bwd_i) / (
+                            (xi_fwd_i[i] - xi[i]) * (xi[i] - xi_bwd_i[i]))
+                    else:
+                        # Fallback to forward or backward differences
+                        xi_fwd2_i = xi.copy()
+                        xi_fwd2_i[i] = xi[i] + 2.0 * h_vec[i]
+                        if xi_bounds is not None:
+                            xi_fwd2_i[i] = np.clip(xi_fwd2_i[i], xi_bounds[i][0], xi_bounds[i][1])
+                        can_fwd = xi_fwd2_i[i] > xi[i] + h_vec[i] * 0.5
+
+                        xi_bwd2_i = xi.copy()
+                        xi_bwd2_i[i] = xi[i] - 2.0 * h_vec[i]
+                        if xi_bounds is not None:
+                            xi_bwd2_i[i] = np.clip(xi_bwd2_i[i], xi_bounds[i][0], xi_bounds[i][1])
+                        can_bwd = xi_bwd2_i[i] < xi[i] - h_vec[i] * 0.5
+
+                        if can_fwd:
+                            j_fwd_i = j_fun(xi_fwd_i) if xi_fwd_i[i] > xi[i] else j_fun(xi_fwd2_i)
+                            j_fwd2_i = j_fun(xi_fwd2_i)
+                            hessian_ij = (j_fwd2_i - 2.0 * j_fwd_i + j0) / (h_vec[i] ** 2)
+                        elif can_bwd:
+                            j_bwd_i = j_fun(xi_bwd_i) if xi_bwd_i[i] < xi[i] else j_fun(xi_bwd2_i)
+                            j_bwd2_i = j_fun(xi_bwd2_i)
+                            hessian_ij = (j0 - 2.0 * j_bwd_i + j_bwd2_i) / (h_vec[i] ** 2)
+                        else:
+                            raise ValueError(
+                                f"Variable {i} (value={xi[i]:.6g}) is at bounds and cannot compute "
+                                f"meaningful Hessian. Bounds: [{xi_bounds[i][0]:.6g}, {xi_bounds[i][1]:.6g}]"
+                            )
+
+                    hessian[i, j] = hessian_ij
+                    hessian[j, i] = hessian_ij  # Symmetry
+                else:
+                    # Off-diagonal element: mixed second derivative w.r.t. xi[i] and xi[j]
+                    # Steps for parameter i
+                    xi_fwd_i = xi.copy()
+                    xi_fwd_i[i] += h_vec[i]
+                    if xi_bounds is not None:
+                        xi_fwd_i[i] = np.clip(xi_fwd_i[i], xi_bounds[i][0], xi_bounds[i][1])
+
+                    xi_bwd_i = xi.copy()
+                    xi_bwd_i[i] -= h_vec[i]
+                    if xi_bounds is not None:
+                        xi_bwd_i[i] = np.clip(xi_bwd_i[i], xi_bounds[i][0], xi_bounds[i][1])
+
+                    # Steps for parameter j
+                    xi_fwd_j = xi.copy()
+                    xi_fwd_j[j] += h_vec[j]
+                    if xi_bounds is not None:
+                        xi_fwd_j[j] = np.clip(xi_fwd_j[j], xi_bounds[j][0], xi_bounds[j][1])
+
+                    xi_bwd_j = xi.copy()
+                    xi_bwd_j[j] -= h_vec[j]
+                    if xi_bounds is not None:
+                        xi_bwd_j[j] = np.clip(xi_bwd_j[j], xi_bounds[j][0], xi_bounds[j][1])
+
+                    # Check bounds for all combinations
+                    can_central = True
+                    if xi_bounds is not None:
+                        if (xi_fwd_i[i] > xi_bounds[i][1] or xi_bwd_i[i] < xi_bounds[i][0] or
+                                xi_fwd_j[j] > xi_bounds[j][1] or xi_bwd_j[j] < xi_bounds[j][0]):
+                            can_central = False
+
+                    if can_central:
+                        # All points within bounds, use central difference
+                        xi_fwdfwd = xi.copy()
+                        xi_fwdfwd[i] += h_vec[i]
+                        xi_fwdfwd[j] += h_vec[j]
+                        if xi_bounds is not None:
+                            xi_fwdfwd[i] = np.clip(xi_fwdfwd[i], xi_bounds[i][0], xi_bounds[i][1])
+                            xi_fwdfwd[j] = np.clip(xi_fwdfwd[j], xi_bounds[j][0], xi_bounds[j][1])
+
+                        xi_fwdbwd = xi.copy()
+                        xi_fwdbwd[i] += h_vec[i]
+                        xi_fwdbwd[j] -= h_vec[j]
+                        if xi_bounds is not None:
+                            xi_fwdbwd[i] = np.clip(xi_fwdbwd[i], xi_bounds[i][0], xi_bounds[i][1])
+                            xi_fwdbwd[j] = np.clip(xi_fwdbwd[j], xi_bounds[j][0], xi_bounds[j][1])
+
+                        xi_bwdfwd = xi.copy()
+                        xi_bwdfwd[i] -= h_vec[i]
+                        xi_bwdfwd[j] += h_vec[j]
+                        if xi_bounds is not None:
+                            xi_bwdfwd[i] = np.clip(xi_bwdfwd[i], xi_bounds[i][0], xi_bounds[i][1])
+                            xi_bwdfwd[j] = np.clip(xi_bwdfwd[j], xi_bounds[j][0], xi_bounds[j][1])
+
+                        xi_bwdbwd = xi.copy()
+                        xi_bwdbwd[i] -= h_vec[i]
+                        xi_bwdbwd[j] -= h_vec[j]
+                        if xi_bounds is not None:
+                            xi_bwdbwd[i] = np.clip(xi_bwdbwd[i], xi_bounds[i][0], xi_bounds[i][1])
+                            xi_bwdbwd[j] = np.clip(xi_bwdbwd[j], xi_bounds[j][0], xi_bounds[j][1])
+
+                        j_fwdfwd = j_fun(xi_fwdfwd)
+                        j_fwdbwd = j_fun(xi_fwdbwd)
+                        j_bwdfwd = j_fun(xi_bwdfwd)
+                        j_bwdbwd = j_fun(xi_bwdbwd)
+
+                        hessian_ij = (j_fwdfwd - j_fwdbwd - j_bwdfwd + j_bwdbwd) / (
+                            (2.0 * h_vec[i]) * (2.0 * h_vec[j]))
+                    else:
+                        # Some points out of bounds, try to compute with clamped steps
+                        hessian_ij = 0.0
+                        try:
+                            xi_pp = xi.copy()
+                            xi_pp[i] += h_vec[i]
+                            xi_pp[j] += h_vec[j]
+                            xi_pm = xi.copy()
+                            xi_pm[i] += h_vec[i]
+                            xi_pm[j] -= h_vec[j]
+                            xi_mp = xi.copy()
+                            xi_mp[i] -= h_vec[i]
+                            xi_mp[j] += h_vec[j]
+                            xi_mm = xi.copy()
+                            xi_mm[i] -= h_vec[i]
+                            xi_mm[j] -= h_vec[j]
+
+                            if xi_bounds is not None:
+                                for k in [i, j]:
+                                    xi_pp[k] = np.clip(xi_pp[k], xi_bounds[k][0], xi_bounds[k][1])
+                                    xi_pm[k] = np.clip(xi_pm[k], xi_bounds[k][0], xi_bounds[k][1])
+                                    xi_mp[k] = np.clip(xi_mp[k], xi_bounds[k][0], xi_bounds[k][1])
+                                    xi_mm[k] = np.clip(xi_mm[k], xi_bounds[k][0], xi_bounds[k][1])
+
+                            j_pp = j_fun(xi_pp)
+                            j_pm = j_fun(xi_pm)
+                            j_mp = j_fun(xi_mp)
+                            j_mm = j_fun(xi_mm)
+
+                            hessian_ij = (j_pp - j_pm - j_mp + j_mm) / (
+                                (xi_pp[i] - xi[i]) * (xi_pp[j] - xi[j]))
+                        except Exception:
+                            hessian_ij = 0.0
+
+                    hessian[i, j] = hessian_ij
+                    hessian[j, i] = hessian_ij  # Symmetry
+
+        return hessian
+
+    else:
+        # Vector-valued function
+        j0 = np.asarray(j0)
+        n_outputs = len(j0) if j0.ndim == 1 else 1
+        if j0.ndim == 0:
+            n_outputs = 1
+            j0 = j0.reshape(1)
+        elif j0.ndim > 1:
+            n_outputs = np.prod(j0.shape)
+            j0 = j0.flatten()
+
+        # Compute Hessian for each component
+        hessians = np.zeros((n_outputs, n_params, n_params), dtype=float)
+
+        for comp in range(n_outputs):
+            def comp_fun(x, _comp=comp):
+                val = j_fun(x)
+                val = np.asarray(val)
+                if val.ndim == 0:
+                    return val.item()
+                elif val.ndim == 1:
+                    return val[_comp] if _comp < len(val) else 0.0
+                else:
+                    return val.flatten()[_comp] if _comp < val.size else 0.0
+
+            hessian_comp = _hessian_fd(comp_fun, xi, xi_bounds, h, rel_step)
+            hessians[comp] = hessian_comp
+
+        return hessians

@@ -34,3 +34,5 @@ htmlcov/
 Thumbs.db
 /tests/unit/.cache
 /tests/unit/tests_plots
+/coverage
+/.claude

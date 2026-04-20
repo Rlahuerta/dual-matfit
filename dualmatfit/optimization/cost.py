@@ -185,9 +185,9 @@ class LSQFit:
         np_dfval = self.residuum_diff(xi)
 
         if self._ftype == 'lsq':
-            return lsq_dfval(np_res, np_dfval)
+            return lsq_dfval(np_res, np_dfval).sum(axis=0)
         elif self._ftype == 'ln':
-            return ln_dfval(np_res, np_dfval)
+            return ln_dfval(np_res, np_dfval).sum(axis=0)
         else:
             raise NotImplementedError
 

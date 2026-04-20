@@ -90,21 +90,22 @@ class TestCostFunctions(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(np_diff_sym, np_diff_ref.sum(axis=0), decimal=1)
 
-    # FIXME
-    @pytest.mark.skip(reason="This test is not ready yet")
     def test_huber_loss(self):
-        result = huber_fval(self.residuum_num, self.delta)
-        abs_res = np.abs(self.residuum_num)
-        expected = np.where(abs_res <= self.delta, 0.5 * self.residuum_num**2, self.delta * (abs_res - 0.5 * self.delta))
+        residuum = self.np_residuum
+        delta_val = 1.0  # Use numeric delta, not sympy Symbol
+        result = huber_fval(residuum, delta=delta_val)
+        abs_res = np.abs(residuum)
+        expected = np.where(abs_res <= delta_val, 0.5 * residuum**2, delta_val * (abs_res - 0.5 * delta_val))
         expected = np.sum(expected)
-        self.assertAlmostEqual(result, expected)
+        # huber_fval returns per-row sums as array; compare scalar values
+        np.testing.assert_almost_equal(result.sum(), expected, decimal=5)
 
-    # FIXME
-    @pytest.mark.skip(reason="This test is not ready yet")
     def test_logcosh_loss(self):
-        result = logcosh_fval(self.residuum_num)
-        expected = np.sum(np.log(np.cosh(self.residuum_num)))
-        self.assertAlmostEqual(result, expected)
+        residuum = self.np_residuum
+        result = logcosh_fval(residuum)
+        expected = np.sum(np.log(np.cosh(residuum)))
+        # logcosh_fval returns per-row sums as array; compare scalar values
+        np.testing.assert_almost_equal(result.sum(), expected, decimal=5)
 
     def test_ln_loss(self):
         result = ln_fval(self.np_residuum)

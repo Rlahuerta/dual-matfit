@@ -159,7 +159,8 @@ class TestMockLSQIntegrator(unittest.TestCase):
         list_fvals = []
 
         for i in range(np_residuum.shape[0]):
-            list_fvals.append(lsq_fval(np_residuum[i, :]))
+            # lsq_fval returns (n_rows,); .item() extracts the scalar
+            list_fvals.append(lsq_fval(np_residuum[i, :]).item())
 
         return sum(list_fvals)
 
@@ -193,11 +194,14 @@ class TestMockLSQIntegrator(unittest.TestCase):
         list_dfvals = []
 
         for i in range(np_residuum.shape[0]):
-            list_fvals.append(lsq_fval(np_residuum[i, :]))
+            # lsq_fval returns (n_rows,); .item() extracts the scalar
+            list_fvals.append(lsq_fval(np_residuum[i, :]).item())
             list_dfvals.append(lsq_dfval(np_residuum[i, :], np_dresiduum[i, :]))
 
         expected_fval = sum(list_fvals)
-        expected_dfval = np.sum(list_dfvals, axis=0)
+        # lsq_dfval returns (n_rows, n_vars); summing over functions gives (1, n_vars).
+        # Flatten to (n_vars,) to match the integrator's flat gradient output.
+        expected_dfval = np.sum(list_dfvals, axis=0).flatten()
 
         # Compute using LSQIntegrator
         fval = self.multi_cost_fun_integrator(xi)
@@ -473,7 +477,7 @@ class TestLSQIntegrator(unittest.TestCase):
                 fval_ki = int_cost_fun_ki(xi)
 
                 # Local derivative verification
-                for fun_j in int_cost_fun_ki.cost_function:
+                for fun_j in int_cost_fun_ki.cost_functions:
                     # res_j = fun_j.residuum(xi)
 
                     np_adj_res_grad_j = fun_j.residuum_diff(xi)
@@ -490,7 +494,7 @@ class TestLSQIntegrator(unittest.TestCase):
                     np_fdm_res_grad_ki = int_cost_fun_ki._cost_function_diff(xi, fdm=True, h=1.e-4)
                     np.testing.assert_almost_equal(np_adj_res_grad_ki, np_fdm_res_grad_ki, decimal=5)
 
-                    for fun_j in int_cost_fun_ki.cost_function:
+                    for fun_j in int_cost_fun_ki.cost_functions:
                         np_adj_vol_grad_j = fun_j.volume_diff(xi)
                         np_fdm_vol_grad_j = fun_j.volume_diff(xi, fdm=True, h=1.e-4)
                         np.testing.assert_almost_equal(np_adj_vol_grad_j, np_fdm_vol_grad_j, decimal=5)
@@ -553,7 +557,7 @@ class TestLSQIntegrator(unittest.TestCase):
 
         list_adj_grad = []
         list_fdm_grad = []
-        for fun_i in int_fun_lsq.cost_function:
+        for fun_i in int_fun_lsq.cost_functions:
             strain_vol_energy.append(fun_i.volume(xi_0))
             np_adj_grad_i = fun_i.volume_diff(xi_0)
             np_fdm_grad_i = fun_i.volume_diff(xi_0, fdm=True, h=1.e-5)

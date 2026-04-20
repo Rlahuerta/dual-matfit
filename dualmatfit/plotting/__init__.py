@@ -25,7 +25,6 @@ __all__ = [
     'plot_segment_force_curves',
     'plot_segment_stress_curves',
     'plot_mean_stress_curves',
-    'plot_curves_from_xlsx',
     'ese_plot',
     'mat_plot',
     # Solution visuals
@@ -63,7 +62,6 @@ _MODULE_MAP = {
     'plot_segment_force_curves': 'analytical_visuals',
     'plot_segment_stress_curves': 'analytical_visuals',
     'plot_mean_stress_curves': 'analytical_visuals',
-    'plot_curves_from_xlsx': 'analytical_visuals',
     'ese_plot': 'analytical_visuals',
     'mat_plot': 'analytical_visuals',
     # Solution visuals

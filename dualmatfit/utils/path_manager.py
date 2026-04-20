@@ -184,14 +184,16 @@ class PathManager:
             Path configuration. If None, uses default configuration.
         base_path : PathLike, optional
             Base directory for all relative paths. Accepts str or Path.
-            If None, uses current working directory.
+            If None, defaults to the project root (parent of the dualmatfit package),
+            ensuring data paths like ``instron_data/`` resolve correctly regardless
+            of the current working directory.
             Will be converted to absolute path.
         """
         self.config = config or PathConfiguration()
         
         # Set and ensure base_path is absolute
         if base_path is None:
-            self.base_path = Path.cwd()
+            self.base_path = PathManager.project_root()
         else:
             self.base_path = _normalize_path(base_path)
             if not self.base_path.is_absolute():
