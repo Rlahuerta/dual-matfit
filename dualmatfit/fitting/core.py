@@ -59,8 +59,9 @@ __all__ = [
     'AnisoMaterialFit',
 ]
 
-# Suppress warnings for cleaner output
-warnings.filterwarnings('ignore')
+# Suppress specific noisy warnings, but allow deprecation and error warnings through
+warnings.filterwarnings('ignore', category=RuntimeWarning)
+warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
 
 
 class AnisoModelSolve:

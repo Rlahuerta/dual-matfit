@@ -3,6 +3,32 @@
 
 A Python library for solving mixed variational problems with multiple fields, designed explicitly for fitting hyperelastic material models (like the Holzapfel-Gasser-Ogden model) to experimental data from extension tests, such as those performed using an Instron machine.
 
+## Associated Publication
+
+This software accompanies the following article:
+
+> **Capturing Regional Variation in Aortic Mechanics: Dual-Estimation Method for Material Parameter Identification and Biological Correlation**
+>
+> Ricardo Doll Lahuerta, Ayumi A. Miyakawa, Marina J. S. Maizato, Renato Crajoinas, Bruno Durante da Silva, José Eduardo Krieger, Eduardo Moacyr Krieger, Idágene A. Cestari
+>
+> *Proceedings of the Royal Society A: Mathematical, Physical and Engineering Sciences* (RSPA-2025-1043)
+>
+> The article introduces the dual-estimation framework for identifying material parameters in the Modified Anisotropic HGO model, combining a global baseline estimator with local refinement while maintaining structural continuity. It validates the approach using uniaxial extension data and protein quantification from Wistar rats, demonstrating that regional variation in aortic mechanics aligns directionally with tissue composition.
+
+### Key References
+
+The constitutive modeling framework builds on:
+
+1. **Holzapfel, G. A., Gasser, T. C., & Ogden, R. W. (2000)**. *A new constitutive framework for arterial wall mechanics and a comparative study of material models*. Journal of Elasticity, 61(1-3), 1-48. [DOI: 10.1023/A:1010835316564](https://doi.org/10.1023/A:1010835316564)
+
+2. **Gasser, T. C., Ogden, R. W., & Holzapfel, G. A. (2006)**. *Hyperelastic modelling of arterial layers with distributed collagen fibre orientations*. Journal of the Royal Society Interface, 3(6), 15-35. [DOI: 10.1098/rsif.2005.0073](https://doi.org/10.1098/rsif.2005.0073)
+
+3. **Holzapfel, G. A., & Ogden, R. W. (2010)**. *Constitutive modelling of arteries*. Proceedings of the Royal Society A, 466(2118), 1551-1597. [DOI: 10.1098/rspa.2010.0058](https://doi.org/10.1098/rspa.2010.0058)
+
+### Funding
+
+This work was supported by FAPESP (grant 2019/21236-9) and CAPES.
+
 ## Introduction
 
 The **Dual Material Fitting** project provides tools for:
@@ -42,6 +68,8 @@ cd dual-matfit
 2. **Create and activate the Conda environment**
 
 ```bash
+source ~/anaconda3/bin/activate root
+
 conda env create -f environment.yml
 conda activate matfit1d
 pip install -e .
@@ -81,12 +109,3 @@ pytest -n auto
 bash local_pipelines.sh
 ```
 
-### Key References
-
-The implementation is based on these seminal papers:
-
-1. **Holzapfel, G. A., Gasser, T. C., & Ogden, R. W. (2000)**. *A new constitutive framework for arterial wall mechanics and a comparative study of material models*. Journal of Elasticity, 61(1-3), 1-48. [DOI: 10.1023/A:1010835316564](https://doi.org/10.1023/A:1010835316564)
-
-2. **Gasser, T. C., Ogden, R. W., & Holzapfel, G. A. (2006)**. *Hyperelastic modelling of arterial layers with distributed collagen fibre orientations*. Journal of the Royal Society Interface, 3(6), 15-35. [DOI: 10.1098/rsif.2005.0073](https://doi.org/10.1098/rsif.2005.0073)
-
-3. **Holzapfel, G. A., & Ogden, R. W. (2010)**. *Constitutive modelling of arteries*. Proceedings of the Royal Society A, 466(2118), 1551-1597. [DOI: 10.1098/rspa.2010.0058](https://doi.org/10.1098/rspa.2010.0058)

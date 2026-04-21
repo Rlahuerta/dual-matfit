@@ -10,8 +10,6 @@ import warnings
 
 import numpy as np
 import pandas as pd
-# import sympy as sy
-# from pathlib import Path
 from typing import Union, Tuple, List, Dict, Any, Optional
 
 from scipy import interpolate
@@ -247,7 +245,9 @@ class InstronData:
 
                 pattern = r'\((.*)\)'
                 match = re.search(pattern, first_col)
-                return match.group(1)
+                if match is not None:
+                    return match.group(1)
+                return first_col
 
         return 'UnknownSample' # Default if no info available
 
@@ -469,8 +469,9 @@ class InstronData:
         # Keep this data processing method
         if self.ncontrol == 0:
             raise ValueError("Control points not initialized. Ensure ncontrol > 0.")
-        # Add a check to avoid division by zero load if needed
-        return self.np_textn_ref / self.np_tload_ref
+        # Guard against division by zero in load reference values
+        safe_load = np.where(np.abs(self.np_tload_ref) < 1e-14, 1.0, self.np_tload_ref)
+        return self.np_textn_ref / safe_load
 
     def get_xstretch(self, xdisp: np.ndarray) -> np.ndarray:
         """

@@ -8,15 +8,11 @@ material mechanics.
 """
 import copy
 import numpy as np
-# import jax.numpy as jnp
 import scipy.linalg as la
-# import scipy.sparse.linalg as sla
-# import numexpr as ne
 
 from typing import List, Optional, Dict, Callable, Union
 
 from scipy import optimize
-from scipy.interpolate import Rbf
 # from jax.scipy.linalg import solve
 from numba import jit
 
@@ -29,7 +25,6 @@ logger = get_logger('solvers')
 __all__ = [
     'rescale',
     'Root',
-    'QuasiNewtonTrustRegion',
 ]
 
 
@@ -286,7 +281,7 @@ class Root:
             float: The barrier function value.
         """
 
-        return self.mu * self.barrier_fun(xi, self.lb, self.ub, dx=0) if self.lb is not None else 0.0
+        return self.mu * self.barrier_fun(xi, self.lb, self.ub, dx=0) if (self.lb is not None and self.btype is not None) else 0.0
 
     def _barrier_jac(self, xi: np.ndarray) -> np.ndarray:
         """Compute the barrier function gradient to penalize boundary violations.

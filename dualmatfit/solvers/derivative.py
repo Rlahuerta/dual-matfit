@@ -6,18 +6,13 @@ This module provides finite difference methods (FDM) and adjoint sensitivity
 analysis for computing gradients of cost functions with respect to material
 parameters.
 """
-# import copy
 from __future__ import annotations
 
 import numpy as np
-# import pandas as pd
-# import sympy as sy
 import jax
 jax.config.update("jax_enable_x64", True)
 
 from scipy.linalg import lstsq, pinv
-# from functools import lru_cache
-# from collections import OrderedDict
 from typing import Tuple, Sequence, Callable, Union, Optional, Any, List
 
 from dualmatfit.utils.logging_config import get_logger
@@ -137,9 +132,14 @@ def _fdm(
 
         # Central difference, if possible
         if xi_fwd_i[i] <= xi_bounds[i][1] and xi_bwd_i[i] >= xi_bounds[i][0]:
-            j_fwd_i = j_fun(xi_fwd_i)
-            j_bwd_i = j_fun(xi_bwd_i)
-            derivative_i = (j_fwd_i - j_bwd_i) / (xi_fwd_i[i] - xi_bwd_i[i])
+            denom = xi_fwd_i[i] - xi_bwd_i[i]
+            if denom == 0.0:
+                # Bounds are equal (lower == upper), parameter is fixed
+                derivative_i = 0.0
+            else:
+                j_fwd_i = j_fun(xi_fwd_i)
+                j_bwd_i = j_fun(xi_bwd_i)
+                derivative_i = (j_fwd_i - j_bwd_i) / denom
         else:
             # If we can not take a central difference we take the next best: forward
             if xi_fwd_i[i] <= xi_bounds[i][1]:
@@ -344,6 +344,13 @@ def _hessian_fd(
             for j in range(i, n_params):  # Exploit symmetry
                 if i == j:
                     # Diagonal element: second derivative w.r.t. xi[i]
+                    # Check for fixed parameter (equal bounds)
+                    if xi_bounds is not None and xi_bounds[i][0] >= xi_bounds[i][1]:
+                        hessian_ij = 0.0
+                        hessian[i, j] = hessian_ij
+                        hessian[j, i] = hessian_ij  # Symmetry
+                        continue
+
                     # Forward step
                     xi_fwd_i = xi.copy()
                     xi_fwd_i[i] += h_vec[i]
@@ -397,6 +404,13 @@ def _hessian_fd(
                     hessian[j, i] = hessian_ij  # Symmetry
                 else:
                     # Off-diagonal element: mixed second derivative w.r.t. xi[i] and xi[j]
+                    # Check for fixed parameters (equal bounds)
+                    if xi_bounds is not None and (
+                            xi_bounds[i][0] >= xi_bounds[i][1] or
+                            xi_bounds[j][0] >= xi_bounds[j][1]):
+                        hessian[i, j] = 0.0
+                        hessian[j, i] = 0.0
+                        continue
                     # Steps for parameter i
                     xi_fwd_i = xi.copy()
                     xi_fwd_i[i] += h_vec[i]
@@ -492,8 +506,13 @@ def _hessian_fd(
                             j_mp = j_fun(xi_mp)
                             j_mm = j_fun(xi_mm)
 
-                            hessian_ij = (j_pp - j_pm - j_mp + j_mm) / (
-                                (xi_pp[i] - xi[i]) * (xi_pp[j] - xi[j]))
+                            denom_i = (xi_pp[i] - xi_mp[i])
+                            denom_j = (xi_pp[j] - xi_pm[j])
+                            if abs(denom_i) < 1e-14 or abs(denom_j) < 1e-14:
+                                # Parameter at bound, mixed derivative is zero
+                                hessian_ij = 0.0
+                            else:
+                                hessian_ij = (j_pp - j_pm - j_mp + j_mm) / (denom_i * denom_j)
                         except Exception:
                             hessian_ij = 0.0
 

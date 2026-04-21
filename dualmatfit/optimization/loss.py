@@ -165,13 +165,13 @@ def cauchy_fval(residuum: np.ndarray, c: float, **kwargs) -> np.ndarray:
         c (float): Scaling parameter.
 
     Returns:
-        np.ndarray: Sum over rows, shape (n_residuals,).
+        np.ndarray: Per-row function values, shape (n_rows,).
     """
     residuum_in = _ensure_2d_residuum(residuum)
 
     np_residuum2 = (residuum_in / c) ** 2
     np_fval = 0.5 * c ** 2 * np.log1p(np_residuum2)
-    return np_fval.sum(axis=0)
+    return np_fval.sum(axis=1)
 
 
 def cauchy_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, c: float, **kwargs) -> np.ndarray:
@@ -184,14 +184,14 @@ def cauchy_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, c: float, **kw
         c (float): Scaling parameter.
 
     Returns:
-        np.ndarray: Sum over rows, shape (n_residuals, n_vars).
+        np.ndarray: Per-row gradient array, shape (n_rows, n_vars).
     """
     residuum_in = _ensure_2d_residuum(residuum)
     residuum_diff_in = _ensure_3d_jacobian(residuum_diff)
 
     weights = residuum_in / (1. + (residuum_in / c) ** 2)          # (n_rows, n_residuals)
     cauchy_diff = weights[:, :, np.newaxis] * residuum_diff_in      # (n_rows, n_residuals, n_vars)
-    return cauchy_diff.sum(axis=0)                                   # (n_residuals, n_vars)
+    return cauchy_diff.sum(axis=1)                                   # (n_rows, n_vars)
 
 
 def huber_fval(residuum: np.ndarray, delta: float = 1., **kwargs) -> np.ndarray:
@@ -256,7 +256,8 @@ def logcosh_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
     residuum_in = _ensure_2d_residuum(residuum)
 
     return np.array(
-        [np.sum(np.log(np.cosh(residuum_in[i, :]))) for i in range(residuum_in.shape[0])]
+        [np.sum(np.abs(residuum_in[i, :]) + np.log1p(np.exp(-2.0 * np.abs(residuum_in[i, :]))) - np.log(2.0))
+         for i in range(residuum_in.shape[0])]
     )
 
 

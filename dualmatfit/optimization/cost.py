@@ -6,18 +6,15 @@ This module provides classes for least squares optimization (LSQFit),
 cost function evaluation (CostFunction), and integrated cost computation
 (CostIntegrator) for material parameter fitting.
 """
-# import copy
 from __future__ import annotations
 
 import warnings
 import numpy as np
 import pandas as pd
 import jax
-# import jax.numpy as jnp
 from jax import jacobian
 jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")
-# import sympy.printing as latex_print
 
 from functools import lru_cache
 from typing import Tuple, Sequence, Callable, Union, Optional, Any
@@ -520,7 +517,7 @@ class CostFunction(DesignVariablesMixin, ExtensionSolution):
         if has_nan(np.atleast_1d(np_rx2)):
             return 1.e6
 
-        elif isinstance(np_rx2, float):
+        elif np.isscalar(np_rx2):
             if self._ftype == 'lsq':
                 return np.dot(np_rx, np_rx)
             elif self._ftype == 'ln':
@@ -715,7 +712,7 @@ class CostIntegrator:
 
     def _check_kwargs(self, kwargs) -> None:
 
-        # TODO: check each of variable has been deprecated, update the file material_fit.py, line 774
+        # TODO: check each variable has been deprecated, update fitting/core.py
         self._c = kwargs.get("c", 10.0)                 # Cauchy parameter
         self._alpha = kwargs.get("alpha", 0.)           # Tikhonov regularization scaling parameter
         if self._alpha is None:
@@ -955,8 +952,6 @@ class CostIntegrator:
 
             # Flatten to get all residuals from all subproblems:
             all_resid = np_resid.ravel()
-
-            all_resid_nw = self._residuum(xi)
         else:
             # Single cost function
             all_resid = self.cost_functions[-1].residuum(xi)
@@ -1027,7 +1022,7 @@ class CostIntegrator:
         if self._mobj:
             np_eqv_dfun = self._cost_function_diff(xi)
         else:
-            np_eqv_dfun = self.cost_functions.derivative(xi)
+            np_eqv_dfun = self.cost_functions[-1].derivative(xi)
 
         if df_xi is not None:
             df_xi[:] = np_eqv_dfun.astype(float)
