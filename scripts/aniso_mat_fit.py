@@ -77,6 +77,7 @@ def baseline_matfit_run(selection: Dict[str, Dict],
     alpha = 0.0001            # .. nc10
     # alpha = 0.00001
 
+    # Volume regularization parameter (epsilon)
     # epsilon = 0.00001
     # epsilon = 0.0005
     # epsilon = 0.0002       # *

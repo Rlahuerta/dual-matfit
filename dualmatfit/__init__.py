@@ -5,6 +5,10 @@ __version__ = "0.1.0"
 
 import importlib
 
+from dualmatfit._jax_config import configure_jax_environment
+
+configure_jax_environment()
+
 # Initialize logging on import (lightweight, no heavy deps)
 from dualmatfit.utils.logging_config import setup_logging
 setup_logging()

@@ -11,19 +11,19 @@ from __future__ import annotations
 import warnings
 import numpy as np
 import pandas as pd
-import jax
+from dualmatfit._jax_config import configure_jax
+
+jax = configure_jax()
 from jax import jacobian
-jax.config.update("jax_enable_x64", True)
-jax.config.update("jax_platform_name", "cpu")
 
 from functools import lru_cache
-from typing import Tuple, Sequence, Callable, Union, Optional, Any
+from typing import Sequence, Callable, Union, Optional, Any
 from scipy import optimize
 
 from dualmatfit.formulation.variational import VariationalFormulation
 from dualmatfit.solvers.extension import ExtensionSolution, DesignVariablesMixin
 from dualmatfit.solvers.derivative import _fdm, adjoint_derivative
-from dualmatfit.optimization.cache import CostCache, LimitedOrderedDict
+from dualmatfit.optimization.cache import CostCache
 from dualmatfit.utils.numeric import sanitize_array, has_nan, is_finite, safe_divide
 from dualmatfit.optimization.regularization import (
     L2Regularization,
@@ -34,15 +34,12 @@ from dualmatfit.optimization.loss import (lsq_fval,
                                       lsq_dfval,
                                       ln_fval,
                                       ln_dfval,
-                                      ln_lsq_fun,
                                       logcosh_fval,
                                       logcosh_dfval,
                                       huber_fval,
                                       huber_dfval,
                                       cauchy_fval,
                                       cauchy_dfval,
-                                      lsq_wise_fval,
-                                      lsq_wise_dfval,
                                       )
 
 __all__ = [
@@ -845,7 +842,7 @@ class CostIntegrator:
             raise ValueError(f"Invalid ftype '{self._ftype}' specified.")
 
     @staticmethod
-    def _map_residuum_function(args) -> Tuple[np.ndarray, np.ndarray]:
+    def _map_residuum_function(args) -> tuple[np.ndarray, np.ndarray]:
         i, fid, fun, xi, diff = args
 
         np_residuum_diff_i = np.zeros((fun.ncontrol, fun.nvars), dtype=float)

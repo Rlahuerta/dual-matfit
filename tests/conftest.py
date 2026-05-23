@@ -1,4 +1,8 @@
 # Test configuration for DualMatFit
+import os
+
+os.environ.setdefault("JAX_PLATFORMS", "cpu")
+
 # Suppress noisy SyntaxWarnings originating from plotting modules due to
 # LaTeX-style escape sequences (e.g. '\\lambda') inside normal Python strings.
 # These don't affect runtime behavior but clutter test output.
@@ -212,4 +216,3 @@ def sample_dsvars_dataframe(variational_form_factory):
     
     return _factory
 # --- End: Sample data fixtures ----------------------------------------------------
-

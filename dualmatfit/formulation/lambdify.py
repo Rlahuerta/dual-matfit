@@ -8,16 +8,18 @@ differentiation.
 """
 import warnings
 import os
-import jax
 import numpy as np
-import jax.numpy as jnp
 import sympy as sy
 
-from typing import List, Dict, Callable, Optional, Sequence
+from typing import List, Callable, Optional, Sequence
+from dualmatfit._jax_config import configure_jax
 from dualmatfit.formulation.variational import VariationalFormulation
 
 from dualmatfit.utils.logging_config import get_logger
 logger = get_logger('codegen')
+
+jax = configure_jax()
+import jax.numpy as jnp
 
 __all__ = [
     'LambdifyBuilder',

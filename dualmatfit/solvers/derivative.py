@@ -9,11 +9,12 @@ parameters.
 from __future__ import annotations
 
 import numpy as np
-import jax
-jax.config.update("jax_enable_x64", True)
+from dualmatfit._jax_config import configure_jax
+
+jax = configure_jax()
 
 from scipy.linalg import lstsq, pinv
-from typing import Tuple, Sequence, Callable, Union, Optional, Any, List
+from typing import Callable, Union, Optional, List
 
 from dualmatfit.utils.logging_config import get_logger
 logger = get_logger('derivative')
