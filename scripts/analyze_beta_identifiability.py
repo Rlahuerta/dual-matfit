@@ -18,9 +18,12 @@ Quarto usage::
 
 Typical library usage::
 
-    sections = load_sections(h5_path="instron_data/final_data.h5", xlsx_path="Results/...xlsx")
+    sections = load_sections(h5_path="path/to/final_data.h5", xlsx_path="Results/...xlsx")
     row = analyze_section(sections[0])
     write_reports([row], csv_out=Path("reviews/metrics.csv"), md_out=Path("reviews/report.md"))
+
+The CLI defaults assume a repository checkout that already contains the
+experimental HDF5 file and generated XLSX outputs.
 """
 
 from __future__ import annotations

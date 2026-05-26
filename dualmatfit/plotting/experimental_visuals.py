@@ -23,6 +23,7 @@ from dualmatfit.data.rato_info import excel_data
 from dualmatfit.data.experimental import InstronData
 from dualmatfit.plotting.plot_helpers import PlotHelper, get_colors, plt_assign_sec, set_axis_labels, set_axis_ticks
 from dualmatfit.plotting.parameters import COLORS, rats_ids, stress_dim
+from dualmatfit.utils.path_manager import PathManager
 
 from dualmatfit.utils.logging_config import get_logger
 logger = get_logger('plotting')
@@ -335,12 +336,12 @@ def article_post(
     Args:
         h5_input_path (Union[str, Path, None], optional):
             Path to the HDF5 data file OR the directory containing 'final_data.h5'.
-            If None, it assumes 'DualMatFit/instron_data/final_data.h5'.
-            The project root is inferred assuming this script is in 'DualMatFit/dualmatfit/plot.py'.
-            Defaults to None.
+            If None, the function uses the repository-local default only when that
+            dataset is present. Installed package artifacts do not bundle the HDF5
+            file, so package users should pass this explicitly. Defaults to None.
         plot_output_root_dir (Union[str, Path, None], optional):
             The root directory where plot subdirectories will be created.
-            If None, it defaults to 'DualMatFit/Results/article_plots_output'.
+            If None, it defaults to 'DualMatFit/Results/instron_plots'.
             Defaults to None.
         rats_ids_to_process (Optional[list], optional):
             List of specific rat IDs to process (e.g., ['rato_1', 'rato_2']).
@@ -356,30 +357,14 @@ def article_post(
         └── Results/
 
     """
-    h5_file_name = 'final_data.h5'
     script_dir = Path(__file__).resolve().parent.parent     # DualMatFit/dualmatfit/plotting/
     project_package_dir = script_dir.parent                 # DualMatFit/dualmatfit/
+    path_manager = PathManager(base_path=project_package_dir)
 
-    # Determine HDF5 file path
-    if h5_input_path is None:
-        h5_file_path = (project_package_dir / 'instron_data' / h5_file_name).resolve()
-    else:
-        h5_input_path_resolved = Path(h5_input_path).resolve()
-        if h5_input_path_resolved.is_dir():
-            h5_file_path = (h5_input_path_resolved / h5_file_name).resolve()
-        elif h5_input_path_resolved.is_file():
-            h5_file_path = h5_input_path_resolved
-        else:
-            # Try one level up if a directory was given but the file wasn't directly in it
-            h5_file_path_check = (h5_input_path_resolved.parent / h5_file_name).resolve()
-            if h5_file_path_check.is_file():
-                h5_file_path = h5_file_path_check
-            else:
-                logger.debug(f"Error: Provided HDF5 input path is neither a valid file nor a directory containing '{h5_file_name}': {h5_input_path}")
-                return
-
-    if not h5_file_path.is_file():
-        logger.debug(f"Error: HDF5 data file not found at: {h5_file_path}")
+    try:
+        h5_file_path = path_manager.resolve_h5_data_path(h5_input_path)
+    except FileNotFoundError as exc:
+        logger.error(str(exc))
         return
 
     # Determine plot output directory
@@ -1190,4 +1175,3 @@ def plot_pk1_stress(ax: plt.Axes,
     ax.legend()
     ax.grid(which='minor', alpha=0.2)
     ax.grid(which='major', alpha=0.5)
-

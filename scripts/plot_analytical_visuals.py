@@ -15,11 +15,14 @@ Typical CLI usage::
 Typical library usage::
 
     plot_curves_from_xlsx(
-        h5_path="instron_data/final_data.h5",
+        h5_path="path/to/final_data.h5",
         xlsx_path="Results/...xlsx",
         output_dir="Results/.../plots",
         ncontrol=15,
     )
+
+The CLI defaults assume a repository checkout that already contains the
+experimental HDF5 file and generated XLSX outputs.
 """
 import argparse
 

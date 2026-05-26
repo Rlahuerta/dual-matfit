@@ -422,6 +422,53 @@ class PathManager:
         if not abs_path.is_file():
             raise FileNotFoundError(f"File not found: {abs_path}")
         return abs_path
+
+    def resolve_h5_data_path(self, h5_path: Optional[PathLike] = None) -> Path:
+        """
+        Resolve the experimental HDF5 file path used by the fitting workflow.
+
+        Parameters
+        ----------
+        h5_path : PathLike, optional
+            Explicit path to the HDF5 file or to a directory containing the
+            configured HDF5 file name. If None, the configured default path is
+            used only when that file exists.
+
+        Returns
+        -------
+        Path
+            Absolute path to an existing HDF5 file.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the explicit path is invalid, or if the default repository-local
+            dataset is unavailable.
+        """
+        if h5_path is None:
+            default_path = self._resolve_path(self.config.get_h5_path())
+            if default_path.is_file():
+                return default_path
+
+            raise FileNotFoundError(
+                "Experimental HDF5 data file not found at the default path "
+                f"{default_path}. Installed package artifacts do not bundle "
+                f"'{self.config.h5_filename}'. Pass `h5_path=` explicitly or "
+                f"provide a directory containing '{self.config.h5_filename}'."
+            )
+
+        candidate = self._resolve_path(h5_path)
+        if candidate.is_dir():
+            candidate = candidate / self.config.h5_filename
+
+        if candidate.is_file():
+            return candidate
+
+        raise FileNotFoundError(
+            "Experimental HDF5 data file not found: "
+            f"{candidate}. Pass a valid .h5 file or a directory containing "
+            f"'{self.config.h5_filename}'."
+        )
     
     def remove_file(self, file_path: PathLike) -> bool:
         """

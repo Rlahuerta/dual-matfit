@@ -15,6 +15,7 @@ from dualmatfit.data.experimental import InstronData
 from dualmatfit.utils.logging_config import get_logger
 from dualmatfit.plotting.experimental_visuals import plot_raw_signals
 from dualmatfit.data.rato_info import excel_data
+from dualmatfit.utils.path_manager import PathManager
 
 
 logger = get_logger('plotting')
@@ -31,24 +32,12 @@ def _project_root() -> Path:
 
 
 def _resolve_h5_file_path(h5_input_path: str | Path | None) -> Path | None:
-    if h5_input_path is None:
-        return (_project_root() / 'instron_data' / _DEFAULT_H5_FILE_NAME).resolve()
-
-    h5_input_path_resolved = Path(h5_input_path).resolve()
-    if h5_input_path_resolved.is_dir():
-        return (h5_input_path_resolved / _DEFAULT_H5_FILE_NAME).resolve()
-    if h5_input_path_resolved.is_file():
-        return h5_input_path_resolved
-
-    h5_file_path_check = (h5_input_path_resolved.parent / _DEFAULT_H5_FILE_NAME).resolve()
-    if h5_file_path_check.is_file():
-        return h5_file_path_check
-
-    logger.debug(
-        "Error: Provided HDF5 input path is neither a valid file nor a directory "
-        f"containing '{_DEFAULT_H5_FILE_NAME}': {h5_input_path}"
-    )
-    return None
+    path_manager = PathManager(base_path=_project_root())
+    try:
+        return path_manager.resolve_h5_data_path(h5_input_path)
+    except FileNotFoundError as exc:
+        logger.error(str(exc))
+        return None
 
 
 def _resolve_plot_output_dir(plot_output_root_dir: str | Path | None) -> Path:
@@ -66,8 +55,7 @@ def article_post(
     Process an HDF5 file and generate raw signal plots for each selected sample.
     """
     h5_file_path = _resolve_h5_file_path(h5_input_path)
-    if h5_file_path is None or not h5_file_path.is_file():
-        logger.debug(f"Error: HDF5 data file not found at: {h5_file_path}")
+    if h5_file_path is None:
         return
 
     plot_output_dir_base = _resolve_plot_output_dir(plot_output_root_dir)
@@ -230,7 +218,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         '--h5-input-path',
-        help="Path to the HDF5 file or a directory containing 'final_data.h5'.",
+        help=(
+            "Path to the HDF5 file or a directory containing "
+            f"'{_DEFAULT_H5_FILE_NAME}'. If omitted, the script uses the "
+            "repository-local dataset only when it is present."
+        ),
     )
     parser.add_argument(
         '--plot-output-root-dir',

@@ -18,13 +18,17 @@ Typical usage for plotting::
 Typical usage for one section analysis::
 
     sections = load_analytical_sections(
-        h5_path="instron_data/final_data.h5",
+        h5_path="path/to/final_data.h5",
         xlsx_path="Results/...xlsx",
         rats=["rato_17"],
         sections=["Ar-A"],
     )
     section = filter_analytical_sections(sections, {"rato_17": {"Ar": ["A"]}})[0]
     cost_function = build_section_cost_function(section)
+
+The repository-local defaults returned by ``default_analytical_run_paths`` are
+intended for a source checkout that already contains the experimental HDF5 file
+and generated results workbook.
 """
 
 from __future__ import annotations

@@ -133,7 +133,7 @@ def load_hdf5_data(
         
     Examples
     --------
-    >>> data = load_hdf5_data('instron_data/final_data.h5')
+    >>> data = load_hdf5_data('path/to/final_data.h5')
     >>> if data is not None:
     ...     for key, df in data.items():
     ...         print(f"Key: {key}, Shape: {df.shape}")
