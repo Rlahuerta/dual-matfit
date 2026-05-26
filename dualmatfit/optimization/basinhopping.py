@@ -88,12 +88,12 @@ class BasinHoppingRunner:
         This function displaces the coordinates randomly. Signature should
         be ``x_new = step_taking(x)``. Note that `x` may be modified in-place.
     accept_tests : list of callables
-        Each test is passed the kwargs `f_new`, `x_new`, `f_old` and
-        `x_old`. These tests will be used to judge whether to accept
-        the step. The acceptable return values are True, False, or ``"force
-        accept"``. If any of the tests return False then the step is rejected.
-        If ``"force accept"``, then this will override any other tests in
-        order to accept the step. This can be used, for example, to forcefully
+        Each test is called as ``test_i(res_new=min_res, res_old=incumbent)``.
+        These tests are used to judge whether to accept the step. The
+        acceptable return values are True, False, or ``"force accept"``. If
+        any of the tests return False then the step is rejected. If
+        ``"force accept"``, then this will override any other tests in order
+        to accept the step. This can be used, for example, to forcefully
         escape from a local minimum that ``basinhopping`` is trapped in.
     disp : bool, optional
         Display status messages.

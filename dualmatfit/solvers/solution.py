@@ -159,8 +159,6 @@ def jit_linsolve(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         Coefficient matrix.
     b : np.ndarray
         Right-hand side vector.
-    stab : float, optional
-        Stabilization term to be added to the diagonal of matrix `a`. Default is 1.e-9.
 
     Returns:
     --------
@@ -337,7 +335,7 @@ class Root:
         """Compute the Jacobian with barrier penalties.
 
         Args:
-            x (np.ndarray): The current variable values.
+            xi (np.ndarray): The current variable values.
 
         Returns:
             np.ndarray: The Jacobian matrix with barrier penalties.
@@ -356,7 +354,7 @@ class Root:
         """Compute the hessian with barrier penalties.
 
         Args:
-            x (np.ndarray): The current variable values.
+            xi (np.ndarray): The current variable values.
 
         Returns:
             np.ndarray: The hessian matrix with barrier penalties.

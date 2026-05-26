@@ -210,11 +210,9 @@ class CostFunction(DesignVariablesMixin, ExtensionSolution):
         -----------
         var_form : VariationalFormulation
             Variational Formulation containing strain energy, stress, and variables.
-        ds : float
-            Cross-sectional area.
         load_ref : np.ndarray
             Reference load values (experimental data).
-        stretch_ref : np.ndarray
+        stretch_x : np.ndarray
             Reference stretch values along the x-axis (experimental data).
         dsvars : pd.DataFrame
             Design variables information table.
@@ -223,7 +221,10 @@ class CostFunction(DesignVariablesMixin, ExtensionSolution):
         module : str, optional
             Numeric library for Sympy lambdify function. Defaults to 'numpy'.
         dtype : str, optional
-            Derivative method ('fdm' or 'adjoint'). Defaults to 'fdm'.
+            Derivative method ('fdm' or 'adjoint'). Defaults to 'adjoint'.
+        cache_size : int, optional
+            Maximum number of cached solve results stored for repeated
+            evaluations. Defaults to 128.
         """
 
         # --- Initialize Base Class ---
@@ -313,7 +314,7 @@ class CostFunction(DesignVariablesMixin, ExtensionSolution):
 
         Returns:
         --------
-        Dict[str, np.ndarray]
+        optimize.OptimizeResult
             Solution output from the `solve` method.
         """
         # Update design variables (also updates self.xi_ref)
@@ -595,7 +596,6 @@ class CostIntegrator:
         Initialize the CostIntegrator.
 
         Args:
-            xi: Initial design variables array.
             mat_cost_fun: Sequence of Cost Function objects.
             ftype: Type of the cost function ('lsq', 'ln', 'cauchy', etc.).
             fid: Index of the primary function to focus on (if stab < 1).

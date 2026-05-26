@@ -40,7 +40,7 @@ class InstronData:
         Initialize the InstronData class
 
         Parameters:
-        - pd_data (pd.DataFrame):       DataFrame containing the experimental data.
+        - df_data (pd.DataFrame):       DataFrame containing the experimental data.
         - info_data (Dict[str, Any]):   Dictionary containing test information.
         - ncontrol (int, optional):     Number of control points for interpolation. Defaults to 10.
         """

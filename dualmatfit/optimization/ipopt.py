@@ -194,10 +194,13 @@ class IpyoptMinimizer:
             Lower/upper bounds on the constraints.
         eval_jac_g_sparsity_indices : tuple of np.ndarrays
             Row/col indices of the nonzero pattern in the constraint Jacobian.
-        eval_h_sparsity_indices : tuple of np.ndarrays
-            Row/col indices of the nonzero pattern in the Hessian of the Lagrangian.
-        eval_f : callable
-            Objective function f(x), and ∇f(x) as a Class
+        eval_h_sparsity_indices : int
+            Placeholder flag for Hessian sparsity support. The current
+            implementation uses ``0`` to indicate that no explicit Hessian
+            sparsity pattern is supplied.
+        obj_fun : callable
+            Objective function ``f(x)`` or ``CostFunction`` instance providing
+            the objective and its gradient.
         eval_g : callable, optional
             Constraint functions g(x).
         eval_jac_g : callable, optional
@@ -366,4 +369,3 @@ if __name__ == '__main__':
     logger.debug(f"IPOPT solution: {solution}")
 
     test = 1.
-

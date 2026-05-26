@@ -102,7 +102,9 @@ class AnisoModelSolve:
         :param ncontrol: Number of control points for material fitting
         :param lambdify: Sympy lambdify backend ('numpy', 'jax', 'scipy', 'sympy', 'mpmath')
         :param main_path: Main path for saving results (Path object, optional)
-        :param h5_path: Path to HDF5 data file (Path object, optional)
+        :param h5_path: Path to the HDF5 data file, or to a directory containing
+                        the configured HDF5 file name. When omitted, the
+                        repository-local default is used only if it exists.
         :param path_config: Custom PathConfiguration. If None, uses defaults.
         
         Performance Parameters
@@ -203,14 +205,7 @@ class AnisoModelSolve:
         self.path_manager = PathManager(config=path_config, base_path=main_path)
         
         # --- Load Experimental Data ---
-        # Determine H5 file path
-        if h5_path is None:
-            h5_file_path = self.path_manager.config.get_h5_path()
-        else:
-            h5_file_path = Path(h5_path)
-        
-        # Validate H5 file exists
-        self.h5_path = self.path_manager.validate_file_exists(h5_file_path)
+        self.h5_path = self.path_manager.resolve_h5_data_path(h5_path)
         
         # Load data from H5 file using context manager for resource safety
         with pd.HDFStore(str(self.h5_path), mode='r') as h5_store:
@@ -1199,4 +1194,3 @@ class AnisoMaterialFit(
                     dict_opt_res[sec_key_i] = opt_solu_setup_i
 
         return df_opt_mat_params, dict_opt_res, dict_local_path
-

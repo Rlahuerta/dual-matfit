@@ -120,7 +120,8 @@ def lsq_wise_fval(residuum: np.ndarray, **kwargs) -> np.ndarray:
         residuum (np.ndarray): Residual vector.
 
     Returns:
-        float: Function value.
+        np.ndarray: Concatenated squared residual values with shape
+        ``(n_rows * n_residuals,)``.
     """
     residuum_in = _ensure_2d_residuum(residuum)
 
@@ -141,7 +142,8 @@ def lsq_wise_dfval(residuum: np.ndarray, residuum_diff: np.ndarray, **kwargs) ->
         residuum_diff (np.ndarray): Derivative of residuals.
 
     Returns:
-        np.ndarray: Gradient vector.
+        np.ndarray: Jacobian-like array with shape
+        ``(n_rows * n_residuals, n_vars)``.
     """
     residuum_in = _ensure_2d_residuum(residuum)
     residuum_diff_in = _ensure_3d_jacobian(residuum_diff)

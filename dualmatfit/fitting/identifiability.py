@@ -68,9 +68,15 @@ class ConditioningReport:
     cost:
         Cost function Value
     jacobian:
-        Shape of the normalized 2D Jacobian used for the analysis.
+        Normalized 2D Jacobian used for the analysis.
     singular_values:
         Singular values of the normalized Jacobian.
+    covariance_matrix:
+        Covariance matrix estimated from the local Jacobian/Hessian analysis.
+    standard_error:
+        Per-parameter standard error estimates derived from the covariance matrix.
+    hessian:
+        Local Hessian matrix used for the conditioning analysis.
     condition_number_jtj:
         Condition number of the Gauss-Newton normal matrix ``J^T J``.
     beta_k1_condition_number:

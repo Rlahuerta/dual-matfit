@@ -13,7 +13,6 @@ import pandas as pd
 from typing import Dict, Any, Union, Optional
 from scipy.optimize import minimize, basinhopping, differential_evolution, shgo, OptimizeResult
 
-from dualmatfit.optimization.ipopt import IpyoptMinimizer
 from dualmatfit.optimization.basinhopping import ipopt_basinhopping
 from dualmatfit.optimization.cost import CostFunction, CostIntegrator
 
@@ -28,6 +27,31 @@ __all__ = [
 
 # Set precision to 4 decimal places, suppress scientific notation
 np.set_printoptions(precision=4, suppress=True)
+
+_IpyoptMinimizer = None
+_IPYOPT_IMPORT_ERROR: Optional[ImportError] = None
+
+
+def _get_ipyopt_minimizer_class():
+    """Import IPOPT lazily so non-IPOPT installs can still use other solvers."""
+    global _IpyoptMinimizer, _IPYOPT_IMPORT_ERROR
+
+    if _IpyoptMinimizer is None and _IPYOPT_IMPORT_ERROR is None:
+        try:
+            from dualmatfit.optimization.ipopt import IpyoptMinimizer as imported_minimizer
+        except ImportError as exc:
+            _IPYOPT_IMPORT_ERROR = exc
+        else:
+            _IpyoptMinimizer = imported_minimizer
+
+    if _IpyoptMinimizer is None:
+        raise ImportError(
+            "IPOPT support requires the optional ipopt dependencies. "
+            "Install them with `pip install -e .[ipopt]` or use a different "
+            "optimizer such as 'L-BFGS-B'."
+        ) from _IPYOPT_IMPORT_ERROR
+
+    return _IpyoptMinimizer
 
 
 def update_opt_parameters(local_res: OptimizeResult, global_res: OptimizeResult):
@@ -260,7 +284,8 @@ def _run_ipopt(cost_function,
         }
         ipopt_min_kwargs.update(ipopt_min_cst_kwargs)
 
-    min_ipopt = IpyoptMinimizer(np_xi_lwr, np_xi_upp, cost_function, **ipopt_min_kwargs)
+    ipyopt_minimizer_cls = _get_ipyopt_minimizer_class()
+    min_ipopt = ipyopt_minimizer_cls(np_xi_lwr, np_xi_upp, cost_function, **ipopt_min_kwargs)
 
     if default_basinhopping_kwargs['niter'] == 0:
         opt_res = min_ipopt(np_ini_dsvars)
@@ -303,8 +328,6 @@ def opt_solvers(otype: str,
             often involving basinhopping with a local optimizer. Defaults to False.
         giter (int, optional): Number of global iterations, typically for basinhopping
             or random restart strategies. Defaults to 1.
-        constraint (ConstraintAggregation, optional): An object representing constraints
-            for the optimization problem, used by IPOPT. Defaults to None.
         seed (int, optional): Random seed for reproducibility. Defaults to 0.
         empty (bool, optional): If True, skips optimization and returns an initial result
             structure. Defaults to False.

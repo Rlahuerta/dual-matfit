@@ -566,19 +566,19 @@ class VariationalFormulation:
     ----------
     ds : float
         Cross-sectional area of the specimen [mm²].
-    itype : str, default='nh'
+    itype : str
         Isotropic material model:
         - 'nh' or 'neo_hookean': Neo-Hookean model (default) [1]
         - 'fung': Fung-type exponential model
-    mix : int, default=1
+    mix : int
         Mixed formulation type for near-incompressibility [4]:
         - 1: Standard displacement (u)
         - 2: Two-field displacement-pressure (u-p)
         - 3: Three-field displacement-pressure-dilatation (u-p-θ)
-    kappa : bool, default=False
+    kappa : bool
         Enable fiber dispersion model [2]. If True, the dispersion parameter
         κ ∈ [0, 1/3] is included as a material parameter.
-    dvol : bool, default=True
+    dvol : bool
         Treat bulk modulus D as a fitting parameter. If False, uses fixed value.
     bulk : float, optional
         Bulk modulus κ [MPa]. Typical range: 50-100 MPa for arterial tissue.
@@ -591,6 +591,8 @@ class VariationalFormulation:
         - 'simo92': Simo et al. (1992) - Ψ_vol = (D/4)(J² - 1 - 2ln(J))
         - 'bathe87': Sussman-Bathe (1987) - Ψ_vol = (D/2)(J - 1)²
         - 'doll8': Doll-Schweizerhof (2000)
+        When ``mix == 2``, this argument is ignored and the formulation uses
+        the internal ``'Sussman'`` volumetric form.
     hv : bool, default=False
         Apply Heaviside function H(I₄ - 1) to anisotropic energy. Ensures
         fibers only contribute in tension (I₄ > 1).

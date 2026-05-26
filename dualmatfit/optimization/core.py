@@ -58,7 +58,7 @@ def _validate_and_fill_gval(
 def cst_sparsity_indices(nvars, cst_num) -> Tuple[np.ndarray, np.ndarray]:
     """
     Define the nonzero slots in the jacobian, there are no nonzeros in the constraint jacobian, this function
-    returns an empty tuple if there are no constraints. Otherwise, it creates two arrays that list the row and
+    returns two empty arrays if there are no constraints. Otherwise, it creates two arrays that list the row and
     column indices for the nonzeros in the Jacobian. The row index repeats for every variable since each variable
     has a nonzero entry in each constraint. The column index corresponds to the position of each variable in the
     optimization problem. The function returns a tuple of two arrays, where the first array contains the row indices
@@ -66,8 +66,10 @@ def cst_sparsity_indices(nvars, cst_num) -> Tuple[np.ndarray, np.ndarray]:
 
     Returns:
     -------
-        Tuple[NDArray, NDArray]: A tuple of two arrays, where the first array contains the row indices and the
-        second array contains the column indices of the nonzeros in the Jacobian.
+        Tuple[np.ndarray, np.ndarray]: A tuple of two arrays, where the first
+        array contains the row indices and the second array contains the
+        column indices of the nonzeros in the Jacobian. If ``cst_num == 0``,
+        both arrays are empty.
     """
 
     if cst_num == 0:
