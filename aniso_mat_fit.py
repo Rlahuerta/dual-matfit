@@ -281,13 +281,14 @@ def main_run():
 
     # New Rats Selection
     SLC_RATS = {
-        'rato_17': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B'], Ab=['A', 'B', 'C']),
-        # 'rato_23': dict(Ar=['A', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),    #*
-        # 'rato_wt_184012': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),
-        # 'rato_wt_184085': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},
-        # 'rato_wt_183997': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),
+        # 'rato_17': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B'], 'Ab': ['A', 'B', 'C']},   # Rat N. 1
+        # 'rato_23': {'Ar': ['A', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},    # Rat N. 2
+        # 'rato_wt_184012': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},  # Rat N. 3
+        'rato_wt_184085': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},    # Rat N. 4
+        'rato_wt_183997': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']}     # Rat N. 5
     }
 
+    # Others optimization Drivers, the IpOpt is the best one and the one that article is based
     #                  0,       1,          2,     3,         4,       5,        6,
     # OPT_TYPES = ['ipopt', 'SLSQP', 'L-BFGS-B', 'TNC', 'DIFFEVOL', 'SHGO', 'MPowell']
     optimizers = ['ipopt']
