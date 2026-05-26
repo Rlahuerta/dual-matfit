@@ -2,12 +2,12 @@
 #
 services:
   dual-matfit:
-      build:
-        context: .
+    build:
+      context: .
 #        no_cache: true
-      image: dual-matfit:dev
-      volumes:
-        - C:/Users/rilah/PycharmProjects/DualMatFit:/opt/project
+    image: dual-matfit:dev
+    volumes:
+      - .:/opt/project
 #      environment:
 #        PYCHARM_DEBUG_HOST: "host.docker.internal"
 #      extra_hosts:

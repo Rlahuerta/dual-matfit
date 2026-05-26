@@ -98,6 +98,13 @@ conda activate matfit1d
 pip install -e .
 ```
 
+If you want to use the IPOPT optimizer outside the provided Conda environment,
+install the optional extra after creating your environment:
+
+```bash
+pip install -e ".[ipopt]"
+```
+
 To update an existing environment after pulling changes:
 
 ```bash
@@ -158,6 +165,10 @@ mypy dualmatfit/
 
 ## Minimal usage example
 
+Built package artifacts do **not** bundle the experimental HDF5 dataset. Pass
+`h5_path` explicitly unless you are running from a repository checkout that also
+contains `instron_data/final_data.h5`.
+
 ```python
 from dualmatfit.fitting.core import AnisoMaterialFit
 
@@ -171,13 +182,14 @@ selection = {
 
 fit = AnisoMaterialFit(
     selection,
+    h5_path="path/to/final_data.h5",
     itype="nh",
     mtype=3,
     dvol=True,
     kappa=True,
     iso_split=False,
     ncontrol=50,
-    opt_type="ipopt",
+    opt_type="L-BFGS-B",
     opt_glb=True,
     lambdify="jax",
 )
@@ -200,6 +212,8 @@ fit.find_optimal_parameters(
 fit.save_data()
 fit.plot_fit(global_opt=True)
 ```
+
+If you prefer `opt_type="ipopt"`, install the optional IPOPT dependencies first.
 
 For the manuscript-style workflow, see `scripts/aniso_mat_fit.py`,
 `scripts/precompute_paper_data.py`, `scripts/plot_experimental_visuals.py`, and
@@ -240,5 +254,7 @@ Aperfeiçoamento de Pessoal de Nível Superior (CAPES; ROR identifier:
 
 ## License
 
-This repository is distributed under a proprietary license. See `LICENSE` for
-details.
+This repository is source-available under the **PolyForm Noncommercial License
+1.0.0**. The code is free to study, use, modify, and redistribute for
+permitted noncommercial purposes, but commercial use is prohibited. This is not
+an OSI-compliant open-source license. See `LICENSE` for the full terms.
