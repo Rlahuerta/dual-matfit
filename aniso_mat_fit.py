@@ -28,15 +28,6 @@ lbdf_mod = "jax"
 
 
 ########################################################################
-# Ratos Selection
-list_ratos_ko = ['rato_1', 'rato_3', 'rato_6', 'rato_8', 'rato_9', 'rato_11']
-list_ratos_wt = ['rato_2', 'rato_4', 'rato_5', 'rato_7', 'rato_10', 'rato_17',
-                 'rato_18', 'rato_20', 'rato_21', 'rato_22', 'rato_23', 'rato_24']
-
-list_ratos_id = ['rato_idoso_3', 'rato_idoso_4']
-
-list_ratos = list_ratos_ko + list_ratos_wt + list_ratos_id
-
 list_slc_colors = ['red', 'blue', 'chocolate', 'tan', 'gray', 'olive', 'lime', 'darkorange', 'teal', 'purple',
                    'salmon', 'teal', 'black', 'deeppink', 'darkviolet', 'royalblue']
 
@@ -273,11 +264,6 @@ def matfit_run(selection: Dict[str, Dict],
 
 def main_run():
     """
-    Verificar tabelas dos parametros materiais utilizando o seguinte artigo:
-
-    Holzapfel, Gerhard A., et al. "Determination of layer-specific mechanical properties of human coronary arteries with
-    nonatherosclerotic intimal thickening and related constitutive modeling." American Journal of Physiology-Heart and
-    Circulatory Physiology 289.5 (2005): H2048-H2058.
 
     """
 
@@ -296,10 +282,10 @@ def main_run():
     # New Rats Selection
     SLC_RATS = {
         'rato_17': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B'], Ab=['A', 'B', 'C']),
-        'rato_23': dict(Ar=['A', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),    #*
-        'rato_wt_184012': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),
-        'rato_wt_184085': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},
-        'rato_wt_183997': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),
+        # 'rato_23': dict(Ar=['A', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),    #*
+        # 'rato_wt_184012': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),
+        # 'rato_wt_184085': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},
+        # 'rato_wt_183997': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),
     }
 
     #                  0,       1,          2,     3,         4,       5,        6,
