@@ -197,6 +197,37 @@ class TestPathManager:
         assert result == test_file
         assert result.is_absolute()
 
+    def test_resolve_h5_data_path_default(self, temp_dir):
+        """Test resolving the default HDF5 path when the file exists."""
+        manager = PathManager(base_path=temp_dir)
+        h5_file = temp_dir / 'instron_data' / 'final_data.h5'
+        h5_file.parent.mkdir()
+        h5_file.write_text('test')
+
+        result = manager.resolve_h5_data_path()
+
+        assert result == h5_file
+        assert result.is_absolute()
+
+    def test_resolve_h5_data_path_directory_input(self, temp_dir):
+        """Test resolving a directory input to its HDF5 file."""
+        manager = PathManager(base_path=temp_dir)
+        h5_dir = temp_dir / 'custom-data'
+        h5_dir.mkdir()
+        h5_file = h5_dir / 'final_data.h5'
+        h5_file.write_text('test')
+
+        result = manager.resolve_h5_data_path(h5_dir)
+
+        assert result == h5_file
+
+    def test_resolve_h5_data_path_default_missing_has_public_hint(self, temp_dir):
+        """Test the public-facing error when the default dataset is unavailable."""
+        manager = PathManager(base_path=temp_dir)
+
+        with pytest.raises(FileNotFoundError, match='do not bundle'):
+            manager.resolve_h5_data_path()
+
 
 class TestPathManagerNewMethods:
     """Tests for new PathManager methods added in refactoring."""

@@ -29,6 +29,16 @@ info_data = {
         }
 
 
+def _integration_h5_file_path() -> Path:
+    return Path(__file__).parent.parent.parent / 'instron_data' / 'final_data.h5'
+
+
+def test_integration_h5_file_path_resolves_from_repo_root():
+    h5_file_path = _integration_h5_file_path()
+    assert h5_file_path == Path(__file__).parent.parent.parent / 'instron_data' / 'final_data.h5'
+    assert h5_file_path.is_file()
+
+
 def create_dummy_solution(n_points=100):
 
     np_stretch_x = np.linspace(1.0, 1.5, n_points)
@@ -268,10 +278,8 @@ class TestPlotInstronData(unittest.TestCase):
         """Set up expensive fixture once for all tests in this class."""
         import pytest
         
-        # Check for data file first using Path
         tests_path = Path(__file__).parent
-        project_path = tests_path.parent
-        h5_file_path = project_path / 'instron_data' / 'final_data.h5'
+        h5_file_path = _integration_h5_file_path()
         
         if not h5_file_path.is_file():
             pytest.skip(f"Skipping integration test - data file not found: {h5_file_path}")
