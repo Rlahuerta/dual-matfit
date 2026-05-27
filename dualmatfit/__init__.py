@@ -1,48 +1,26 @@
 # -*- coding: utf-8 -*-
-"""
-DualMatFit - Dual Material Fitting
-
-A Python package for fitting hyperelastic material models to experimental data,
-with a focus on dual material formulations for arterial tissues.
-"""
-
-# Initialize logging on package import
-from dualmatfit.logging_config import setup_logging
-
-# Setup logging with default configuration
-# Users can reconfigure by calling setup_logging() with custom parameters
-setup_logging()
-
-# Export extracted utility classes
-from dualmatfit.cost_cache import CostCache, LimitedOrderedDict
-from dualmatfit.regularization import (
-    RegularizationStrategy,
-    L2Regularization,
-    VolumeRegularization,
-    CompositeRegularization,
-)
-from dualmatfit.numeric_utils import (
-    sanitize_array,
-    sanitize_gradient,
-    has_nan,
-    has_inf,
-    is_finite,
-    has_non_finite,
-    safe_divide,
-)
+"""Dual Material Fitting for 1D."""
 
 __version__ = "0.1.0"
 
+import importlib
+
+from dualmatfit._jax_config import configure_jax_environment
+
+configure_jax_environment()
+
+# Initialize logging on import (lightweight, no heavy deps)
+from dualmatfit.utils.logging_config import setup_logging
+setup_logging()
+
 __all__ = [
-    # Cache utilities
+    "__version__",
     "CostCache",
     "LimitedOrderedDict",
-    # Regularization strategies
     "RegularizationStrategy",
     "L2Regularization",
     "VolumeRegularization",
     "CompositeRegularization",
-    # Numeric utilities
     "sanitize_array",
     "sanitize_gradient",
     "has_nan",
@@ -51,3 +29,26 @@ __all__ = [
     "has_non_finite",
     "safe_divide",
 ]
+
+_SUBPKG_MAP = {
+    "CostCache": "optimization.cache",
+    "LimitedOrderedDict": "optimization.cache",
+    "RegularizationStrategy": "optimization.regularization",
+    "L2Regularization": "optimization.regularization",
+    "VolumeRegularization": "optimization.regularization",
+    "CompositeRegularization": "optimization.regularization",
+    "sanitize_array": "utils.numeric",
+    "sanitize_gradient": "utils.numeric",
+    "has_nan": "utils.numeric",
+    "has_inf": "utils.numeric",
+    "is_finite": "utils.numeric",
+    "has_non_finite": "utils.numeric",
+    "safe_divide": "utils.numeric",
+}
+
+
+def __getattr__(name):
+    if name in _SUBPKG_MAP:
+        module = importlib.import_module(f"dualmatfit.{_SUBPKG_MAP[name]}")
+        return getattr(module, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

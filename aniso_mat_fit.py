@@ -6,8 +6,8 @@ import numpy as np
 from datetime import datetime
 from typing import Dict
 
-from dualmatfit.material_fit import AnisoMaterialFit
-from dualmatfit.logging_config import get_logger
+from dualmatfit.fitting.core import AnisoMaterialFit
+from dualmatfit.utils.logging_config import get_logger
 
 logger = get_logger('aniso_mat_fit')
 warnings.filterwarnings('ignore')
@@ -28,15 +28,6 @@ lbdf_mod = "jax"
 
 
 ########################################################################
-# Ratos Selection
-list_ratos_ko = ['rato_1', 'rato_3', 'rato_6', 'rato_8', 'rato_9', 'rato_11']
-list_ratos_wt = ['rato_2', 'rato_4', 'rato_5', 'rato_7', 'rato_10', 'rato_17',
-                 'rato_18', 'rato_20', 'rato_21', 'rato_22', 'rato_23', 'rato_24']
-
-list_ratos_id = ['rato_idoso_3', 'rato_idoso_4']
-
-list_ratos = list_ratos_ko + list_ratos_wt + list_ratos_id
-
 list_slc_colors = ['red', 'blue', 'chocolate', 'tan', 'gray', 'olive', 'lime', 'darkorange', 'teal', 'purple',
                    'salmon', 'teal', 'black', 'deeppink', 'darkviolet', 'royalblue']
 
@@ -273,11 +264,6 @@ def matfit_run(selection: Dict[str, Dict],
 
 def main_run():
     """
-    Verificar tabelas dos parametros materiais utilizando o seguinte artigo:
-
-    Holzapfel, Gerhard A., et al. "Determination of layer-specific mechanical properties of human coronary arteries with
-    nonatherosclerotic intimal thickening and related constitutive modeling." American Journal of Physiology-Heart and
-    Circulatory Physiology 289.5 (2005): H2048-H2058.
 
     """
 
@@ -295,13 +281,14 @@ def main_run():
 
     # New Rats Selection
     SLC_RATS = {
-        'rato_17': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B'], Ab=['A', 'B', 'C']),
-        'rato_23': dict(Ar=['A', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),    #*
-        'rato_wt_184012': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),
-        'rato_wt_184085': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},
-        'rato_wt_183997': dict(Ar=['A', 'B', 'C'], Tr=['A', 'B', 'C'], Ab=['A', 'B', 'C']),
+        # 'rato_17': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B'], 'Ab': ['A', 'B', 'C']},   # Rat N. 1
+        # 'rato_23': {'Ar': ['A', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},    # Rat N. 2
+        # 'rato_wt_184012': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},  # Rat N. 3
+        'rato_wt_184085': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']},    # Rat N. 4
+        'rato_wt_183997': {'Ar': ['A', 'B', 'C'], 'Tr': ['A', 'B', 'C'], 'Ab': ['A', 'B', 'C']}     # Rat N. 5
     }
 
+    # Others optimization Drivers, the IpOpt is the best one and the one that article is based
     #                  0,       1,          2,     3,         4,       5,        6,
     # OPT_TYPES = ['ipopt', 'SLSQP', 'L-BFGS-B', 'TNC', 'DIFFEVOL', 'SHGO', 'MPowell']
     optimizers = ['ipopt']

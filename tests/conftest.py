@@ -1,4 +1,8 @@
 # Test configuration for DualMatFit
+import os
+
+os.environ.setdefault("JAX_PLATFORMS", "cpu")
+
 # Suppress noisy SyntaxWarnings originating from plotting modules due to
 # LaTeX-style escape sequences (e.g. '\\lambda') inside normal Python strings.
 # These don't affect runtime behavior but clutter test output.
@@ -84,7 +88,7 @@ def variational_form_factory(fast_variational_form_args):
     
     The factory automatically applies fast mode settings unless overridden.
     """
-    from dualmatfit.variational_form import VariationalFormulation
+    from dualmatfit.formulation.variational import VariationalFormulation
     
     def _factory(**override_args):
         # Merge fast defaults with user overrides
@@ -185,7 +189,7 @@ def sample_dsvars_dataframe(variational_form_factory):
     Returns:
         Callable: Factory function that creates dsvars DataFrame for a VariationalFormulation.
     """
-    def _factory(var_form, values=None, variable=True, lower=0.1, upper=10.0):
+    def _factory(var_form, values=None, variable=True, lower=0.1, upper=10.0, baseline=None):
         mat_vars_keys = [str(s) for s in var_form.mat_vars]
         n_vars = len(mat_vars_keys)
         
@@ -198,14 +202,17 @@ def sample_dsvars_dataframe(variational_form_factory):
             lower = [lower] * n_vars
         if isinstance(upper, (int, float)):
             upper = [upper] * n_vars
+
+        if baseline is None:
+            baseline = list(lower)
             
         return pd.DataFrame({
             'values': values,
             'variable': variable,
             'lower': lower,
-            'upper': upper
+            'upper': upper,
+            'baseline': baseline,
         }, index=mat_vars_keys)
     
     return _factory
 # --- End: Sample data fixtures ----------------------------------------------------
-

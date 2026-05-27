@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.colors as mcolors
 
-from dualmatfit.logging_config import get_logger
-from dualmatfit.numeric_utils import sanitize_array, has_nan
+from dualmatfit.utils.logging_config import get_logger
+from dualmatfit.utils.numeric import sanitize_array, has_nan
 logger = get_logger('plotting')
 
 __all__ = [
